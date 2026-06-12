@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import {
@@ -110,7 +111,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/client/vouchers?type=${voucherType}`);
+      const res = await apiFetch(`/api/client/vouchers?type=${voucherType}`);
       const json = await res.json();
       if (json.success) setItems(json.data);
     } finally {
@@ -120,7 +121,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
 
   useEffect(() => {
     loadItems();
-    fetch("/api/client/coa")
+    apiFetch("/api/client/coa")
       .then((r) => r.json())
       .then((json) => {
         if (!json.success) return;
@@ -156,7 +157,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/client/vouchers", {
+      const res = await apiFetch("/api/client/vouchers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -191,7 +192,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
       await loadItems();
 
       if (print) {
-        const detailRes = await fetch(`/api/client/vouchers/${json.data.id}`);
+        const detailRes = await apiFetch(`/api/client/vouchers/${json.data.id}`);
         const detailJson = await detailRes.json();
         if (detailJson.success) {
           setPreviewItem(detailJson.data);
@@ -207,7 +208,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا السند؟")) return;
-    await fetch(`/api/client/vouchers/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/client/vouchers/${id}`, { method: "DELETE" });
     await loadItems();
   }
 
@@ -215,7 +216,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
     setPrintingId(id);
     const prefix = isReceipt ? "sanad-qabd" : "sanad-sarf";
     try {
-      const res = await fetch(`/api/client/vouchers/${id}/export-pdf`);
+      const res = await apiFetch(`/api/client/vouchers/${id}/export-pdf`);
       if (!res.ok) {
         const json = await res.json().catch(() => null);
         alert(json?.message || json?.error || "فشل تصدير PDF");

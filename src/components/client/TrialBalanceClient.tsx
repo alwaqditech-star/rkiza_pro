@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import { IconInbox, IconRefresh, IconScale } from "@tabler/icons-react";
@@ -26,7 +27,7 @@ export function TrialBalanceClient() {
       const params = new URLSearchParams();
       if (from) params.set("from", from);
       if (to) params.set("to", to);
-      const res = await fetch(`/api/client/trial?${params.toString()}`);
+      const res = await apiFetch(`/api/client/trial?${params.toString()}`);
       const json = await res.json();
       if (json.success) setRows(json.data);
       setLoaded(true);

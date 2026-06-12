@@ -11,6 +11,7 @@ import {
   IconFileInvoice,
   IconInbox,
 } from "@tabler/icons-react";
+import { apiFetch } from "@/lib/api-client";
 import { fmtAmt } from "@/lib/format";
 import { permissionDeniedMessage, type ClientAccessLevel } from "@/lib/client-permissions";
 
@@ -50,7 +51,7 @@ function ClientDashboardContent() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/client/dashboard");
+      const res = await apiFetch("/api/client/dashboard");
       const json = await res.json();
       if (json.success) {
         setData(json.data);

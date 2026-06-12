@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -48,7 +49,7 @@ export function ClientProfileModal({
     setAvatarFile(null);
     setLoading(true);
 
-    fetch("/api/client/profile")
+    apiFetch("/api/client/profile")
       .then((res) => res.json())
       .then((json: { success: boolean; data?: ProfileData; message?: string }) => {
         if (!json.success || !json.data) {
@@ -105,7 +106,7 @@ export function ClientProfileModal({
         formData.append("avatar", avatarFile);
       }
 
-      const res = await fetch("/api/client/profile", {
+      const res = await apiFetch("/api/client/profile", {
         method: "PUT",
         body: formData,
       });

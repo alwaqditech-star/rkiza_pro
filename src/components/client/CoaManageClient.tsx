@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconListTree, IconPlus, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
@@ -33,7 +34,7 @@ export function CoaManageClient() {
     setLoading(true);
     setLoadError("");
     try {
-      const res = await fetch("/api/client/coa");
+      const res = await apiFetch("/api/client/coa");
       const json = await res.json();
       if (json.success) {
         setAccounts(json.data);
@@ -72,7 +73,7 @@ export function CoaManageClient() {
     }
 
     setMessage("");
-    const res = await fetch("/api/client/coa", {
+    const res = await apiFetch("/api/client/coa", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -98,7 +99,7 @@ export function CoaManageClient() {
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا الحساب؟")) return;
-    const res = await fetch(`/api/client/coa/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/client/coa/${id}`, { method: "DELETE" });
     const json = await res.json();
     if (json.success) loadAccounts();
     else alert(json.message ?? "فشل الحذف");

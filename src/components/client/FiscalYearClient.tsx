@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -19,7 +20,7 @@ export function FiscalYearClient() {
   const loadStatus = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/client/fiscal");
+      const res = await apiFetch("/api/client/fiscal");
       const json = await res.json();
       if (json.success) {
         setStatus(json.data);
@@ -42,7 +43,7 @@ export function FiscalYearClient() {
     ) {
       return;
     }
-    const res = await fetch("/api/client/fiscal", {
+    const res = await apiFetch("/api/client/fiscal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "close" }),
@@ -57,7 +58,7 @@ export function FiscalYearClient() {
     if (!year) return;
     if (!confirm(`فتح السنة المالية الجديدة ${year}م؟`)) return;
 
-    const res = await fetch("/api/client/fiscal", {
+    const res = await apiFetch("/api/client/fiscal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "open", year }),

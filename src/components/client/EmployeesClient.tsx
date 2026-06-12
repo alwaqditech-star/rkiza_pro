@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -48,7 +49,7 @@ export function EmployeesClient() {
   const loadEmployees = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/client/employees");
+      const res = await apiFetch("/api/client/employees");
       const json = await res.json();
       if (json.success) setEmployees(json.data);
     } finally {
@@ -126,7 +127,7 @@ export function EmployeesClient() {
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا الموظف؟")) return;
-    const res = await fetch(`/api/client/employees/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/client/employees/${id}`, { method: "DELETE" });
     const json = await res.json();
     if (json.success) loadEmployees();
     else alert(json.message ?? "فشل الحذف");

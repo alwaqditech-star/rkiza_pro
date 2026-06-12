@@ -1,4 +1,6 @@
 "use client";
+import { apiFetch } from "@/lib/api-client";
+import { syncSessionCookie } from "@/lib/session-bridge";
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,7 +29,7 @@ export default function FirstLoginPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/first-login", {
+      const res = await apiFetch("/api/auth/first-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ new_password: password }),
@@ -36,6 +38,9 @@ export default function FirstLoginPage() {
       if (!json.success) {
         setError(json.message || "فشل تحديث كلمة المرور");
         return;
+      }
+      if (json.token) {
+        await syncSessionCookie(json.token);
       }
       router.push("/client");
       router.refresh();

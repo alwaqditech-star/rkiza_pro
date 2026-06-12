@@ -2,16 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { IconLogout } from "@tabler/icons-react";
+import { apiFetch } from "@/lib/api-client";
+import { clearSessionCookie } from "@/lib/session-bridge";
 
 export function AdminLogoutButton() {
   const router = useRouter();
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await apiFetch("/api/auth/logout", { method: "POST" }).catch(() => null);
+    await clearSessionCookie();
     router.push("/");
     router.refresh();
   }
-
   return (
     <button
       type="button"

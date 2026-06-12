@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -43,7 +44,7 @@ export function OrgSettingsClient() {
   const loadSettings = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/client/org-settings");
+      const res = await apiFetch("/api/client/org-settings");
       const json = await res.json();
       if (json.success) setForm({ ...emptySettings(), ...json.data });
     } finally {
@@ -70,7 +71,7 @@ export function OrgSettingsClient() {
       if (stampFile) payload.append("stamp", stampFile);
       if (logoFile) payload.append("logo", logoFile);
 
-      const res = await fetch("/api/client/org-settings", { method: "PUT", body: payload });
+      const res = await apiFetch("/api/client/org-settings", { method: "PUT", body: payload });
       const json = await res.json();
       setMessage(json.message ?? (json.success ? "تم الحفظ" : "فشل الحفظ"));
       if (json.success && json.data) {

@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -41,14 +42,14 @@ export function JournalEntryClient() {
   const [success, setSuccess] = useState("");
 
   const loadNextNumber = useCallback(async () => {
-    const res = await fetch("/api/client/journals/next-number");
+    const res = await apiFetch("/api/client/journals/next-number");
     const json = await res.json();
     if (json.success) setJournalNumber(json.data.journal_number);
   }, []);
 
   useEffect(() => {
     loadNextNumber();
-    fetch("/api/client/coa")
+    apiFetch("/api/client/coa")
       .then((r) => r.json())
       .then((json) => {
         if (json.success) {
@@ -121,7 +122,7 @@ export function JournalEntryClient() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/client/journals", {
+      const res = await apiFetch("/api/client/journals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

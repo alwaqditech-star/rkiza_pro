@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -43,7 +44,7 @@ export function PayrollClient() {
     setLoading(true);
     setMessage("");
     try {
-      const res = await fetch(`/api/client/payroll?month=${month}&year=${year}`);
+      const res = await apiFetch(`/api/client/payroll?month=${month}&year=${year}`);
       const json = await res.json();
       if (json.success) setPreview(json.data);
     } finally {
@@ -64,7 +65,7 @@ export function PayrollClient() {
     if (!preview) return;
     if (!confirm(`ترحيل قيد مسير رواتب ${preview.month_label} ${preview.year}م؟`)) return;
 
-    const res = await fetch("/api/client/payroll", {
+    const res = await apiFetch("/api/client/payroll", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ month, year: Number(year) }),

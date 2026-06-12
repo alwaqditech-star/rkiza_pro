@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -121,8 +122,8 @@ export function ExpensesReportClient() {
     setLoading(true);
     try {
       const [payRes, recRes] = await Promise.all([
-        fetch("/api/client/vouchers?type=disbursement"),
-        fetch("/api/client/vouchers?type=receipt"),
+        apiFetch("/api/client/vouchers?type=disbursement"),
+        apiFetch("/api/client/vouchers?type=receipt"),
       ]);
       const payJson = await payRes.json();
       const recJson = await recRes.json();

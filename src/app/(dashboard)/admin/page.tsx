@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -33,7 +34,7 @@ export default function AdminDashboardPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/associations");
+      const res = await apiFetch("/api/admin/associations");
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل تحميل البيانات");

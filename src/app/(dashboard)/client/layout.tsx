@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionFromCookie } from "@/lib/auth";
 import { getClientPermissions } from "@/lib/client-permissions";
 import { ClientLayoutShell } from "@/components/client/ClientLayoutShell";
+import { SessionHydrator } from "@/components/SessionHydrator";
 
 export default async function ClientLayout({
   children,
@@ -16,8 +17,11 @@ export default async function ClientLayout({
   const permissions = getClientPermissions(session);
 
   return (
-    <ClientLayoutShell session={session} permissions={permissions}>
-      {children}
-    </ClientLayoutShell>
+    <>
+      <SessionHydrator />
+      <ClientLayoutShell session={session} permissions={permissions}>
+        {children}
+      </ClientLayoutShell>
+    </>
   );
 }

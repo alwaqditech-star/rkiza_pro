@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -119,7 +120,7 @@ export function DonationsReportClient() {
   const loadRows = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/client/vouchers?type=receipt");
+      const res = await apiFetch("/api/client/vouchers?type=receipt");
       const json = await res.json();
       if (json.success) setRows(json.data);
     } finally {

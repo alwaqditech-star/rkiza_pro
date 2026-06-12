@@ -2,6 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import { IconScale } from "@tabler/icons-react";
+import { apiFetch } from "@/lib/api-client";
+import { syncSessionCookie } from "@/lib/session-bridge";
 
 export function LoginScreen() {
   const [username, setUsername] = useState("");
@@ -15,17 +17,21 @@ export function LoginScreen() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await apiFetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
         body: JSON.stringify({
           username: username.trim(),
           password: password.trim(),
         }),
       });
 
-      let json: { success?: boolean; message?: string; data?: { role?: string; is_first_login?: boolean } };
+      let json: {
+        success?: boolean;
+        message?: string;
+        token?: string;
+        data?: { role?: string; is_first_login?: boolean };
+      };
       try {
         json = await res.json();
       } catch {
@@ -41,6 +47,13 @@ export function LoginScreen() {
         setError(json.message || "بيانات الدخول غير صحيحة");
         return;
       }
+
+      if (!json.token) {
+        setError("استجابة غير صالحة من الخادم");
+        return;
+      }
+
+      await syncSessionCookie(json.token);
 
       const data = json.data;
       if (!data) {

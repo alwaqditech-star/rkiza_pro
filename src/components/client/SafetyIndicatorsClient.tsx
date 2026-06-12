@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import {
@@ -53,7 +54,7 @@ export function SafetyIndicatorsClient() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/client/indicators?fiscal_year=${fiscalYear}`);
+      const res = await apiFetch(`/api/client/indicators?fiscal_year=${fiscalYear}`);
       const json = await res.json();
       const nextInput = json.success && json.data.input
         ? { ...emptyInput(fiscalYear), ...json.data.input }
@@ -76,7 +77,7 @@ export function SafetyIndicatorsClient() {
   }
 
   async function handleSave() {
-    const res = await fetch("/api/client/indicators", {
+    const res = await apiFetch("/api/client/indicators", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
@@ -88,7 +89,7 @@ export function SafetyIndicatorsClient() {
   }
 
   async function autoFill() {
-    const dashRes = await fetch("/api/client/dashboard");
+    const dashRes = await apiFetch("/api/client/dashboard");
     const dashJson = await dashRes.json();
     if (!dashJson.success) return;
 

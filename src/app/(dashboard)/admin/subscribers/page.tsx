@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -52,7 +53,7 @@ export default function SubscribersPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/associations");
+      const res = await apiFetch("/api/admin/associations");
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل تحميل البيانات");
@@ -80,7 +81,7 @@ export default function SubscribersPage() {
     setCredentials(null);
 
     try {
-      const res = await fetch("/api/admin/associations", {
+      const res = await apiFetch("/api/admin/associations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ association_name: associationName.trim() }),
@@ -110,7 +111,7 @@ export default function SubscribersPage() {
     setError("");
     setSuccess("");
     try {
-      const res = await fetch(`/api/admin/associations/${id}/renew`, {
+      const res = await apiFetch(`/api/admin/associations/${id}/renew`, {
         method: "POST",
       });
       const json = await res.json();
@@ -174,7 +175,7 @@ export default function SubscribersPage() {
         payload.password = editPassword;
       }
 
-      const res = await fetch(`/api/admin/associations/${editing.id}`, {
+      const res = await apiFetch(`/api/admin/associations/${editing.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -200,7 +201,7 @@ export default function SubscribersPage() {
     setError("");
     setSuccess("");
     try {
-      const res = await fetch(`/api/admin/associations/${id}`, {
+      const res = await apiFetch(`/api/admin/associations/${id}`, {
         method: "DELETE",
       });
       const json = await res.json();
@@ -220,7 +221,7 @@ export default function SubscribersPage() {
     setError("");
     setSuccess("");
     try {
-      const res = await fetch("/api/admin/associations/export-pdf");
+      const res = await apiFetch("/api/admin/associations/export-pdf");
       if (!res.ok) {
         const json = await res.json().catch(() => null);
         setError(json?.message || json?.error || "فشل تصدير PDF");
@@ -243,7 +244,7 @@ export default function SubscribersPage() {
 
   async function handleExport() {
     try {
-      const res = await fetch("/api/admin/reports?format=excel");
+      const res = await apiFetch("/api/admin/reports?format=excel");
       if (!res.ok) {
         const json = await res.json();
         setError(json.message || "فشل تصدير التقرير");

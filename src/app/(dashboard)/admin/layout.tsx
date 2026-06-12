@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { IconBuildingCommunity, IconChartBar } from "@tabler/icons-react";
 import { AdminUserLink } from "@/components/admin/AdminUserLink";
+import { SessionHydrator } from "@/components/SessionHydrator";
 import { getSessionFromCookie } from "@/lib/auth";
 import { AdminLogoutButton } from "./AdminLogoutButton";
 import { AdminNav } from "./AdminNav";
@@ -19,6 +20,7 @@ export default async function AdminLayout({
 
   return (
     <>
+      <SessionHydrator />
       <aside id="sidebar">
         <div className="sb-logo">
           <div className="sb-logo-mark">

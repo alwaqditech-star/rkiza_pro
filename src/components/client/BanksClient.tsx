@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -54,7 +55,7 @@ export function BanksClient() {
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/client/banks");
+      const res = await apiFetch("/api/client/banks");
       const json = await res.json();
       if (json.success) setItems(json.data);
     } finally {
@@ -112,7 +113,7 @@ export function BanksClient() {
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا الحساب البنكي؟")) return;
-    const res = await fetch(`/api/client/banks/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/client/banks/${id}`, { method: "DELETE" });
     const json = await res.json();
     if (json.success) loadItems();
     else alert(json.message ?? "فشل الحذف");

@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -30,7 +31,7 @@ export function UsersClient() {
   const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/client/users");
+      const res = await apiFetch("/api/client/users");
       const json = await res.json();
       if (json.success) setUsers(json.data);
     } finally {
@@ -82,7 +83,7 @@ export function UsersClient() {
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا المستخدم؟")) return;
-    const res = await fetch(`/api/client/users/${id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/client/users/${id}`, { method: "DELETE" });
     const json = await res.json();
     if (json.success) loadUsers();
     else alert(json.message ?? "فشل الحذف");

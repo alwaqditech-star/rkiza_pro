@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useEffect, useState } from "react";
 import {
@@ -85,7 +86,7 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/client/journals/accounts")
+    apiFetch("/api/client/journals/accounts")
       .then((r) => r.json())
       .then((json) => {
         if (json.success) setAccounts(json.data);

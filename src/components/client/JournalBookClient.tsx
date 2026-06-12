@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import { IconChevronDown, IconInbox, IconNotebook } from "@tabler/icons-react";
@@ -38,7 +39,7 @@ export function JournalBookClient() {
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/client/journals?month=${month}`);
+      const res = await apiFetch(`/api/client/journals?month=${month}`);
       const json = await res.json();
       if (json.success) setItems(json.data);
     } finally {

@@ -1,4 +1,5 @@
 "use client";
+import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,7 +34,7 @@ export default function AdminProfilePage() {
     async function loadProfile() {
       setLoading(true);
       try {
-        const res = await fetch("/api/admin/profile");
+        const res = await apiFetch("/api/admin/profile");
         const json = await res.json();
         if (!json.success) {
           setError(json.message || "فشل تحميل الملف الشخصي");
@@ -88,7 +89,7 @@ export default function AdminProfilePage() {
         formData.append("avatar", avatarFile);
       }
 
-      const res = await fetch("/api/admin/profile", {
+      const res = await apiFetch("/api/admin/profile", {
         method: "PUT",
         body: formData,
       });
