@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "dev:api": "npm --prefix ../api_project run dev",
-    "dev:all": "node scripts/dev-all.mjs"
+    "dev:all": "node scripts/dev-all.mjs",
+    "check:prod-login": "node scripts/check-production-login.mjs"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.44.0",
