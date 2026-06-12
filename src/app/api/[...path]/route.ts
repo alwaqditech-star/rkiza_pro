@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001';
+import { getApiBaseUrl } from '@/lib/api-config';
 
 async function proxyToApiProject(
   request: NextRequest,
   pathSegments: string[],
 ): Promise<NextResponse> {
   const path = pathSegments.join('/');
-  const targetUrl = new URL(`/api/${path}`, API_BASE_URL);
+  const targetUrl = new URL(`/api/${path}`, getApiBaseUrl());
   targetUrl.search = request.nextUrl.search;
 
   const headers = new Headers(request.headers);
@@ -41,7 +40,7 @@ async function proxyToApiProject(
       {
         success: false,
         message:
-          'خادم البيانات (api_project) غير متصل — شغّله أولاً: cd api_project && npm run dev',
+          'لا يمكن الاتصال بخادم API — تحقق من rkiza-api.vercel.app أو شغّل api_project محلياً',
         error: message,
       },
       { status: 503 },

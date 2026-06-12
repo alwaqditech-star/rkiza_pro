@@ -24,9 +24,20 @@ export function LoginScreen() {
           password: password.trim(),
         }),
       });
-      const json = await res.json();
 
-      if (!json.success) {
+      let json: { success?: boolean; message?: string; data?: { role?: string; is_first_login?: boolean } };
+      try {
+        json = await res.json();
+      } catch {
+        setError(
+          res.status === 404
+            ? "خادم API غير متاح — تحقق من نشر rkiza-api على Vercel"
+            : `خطأ في الاتصال بالخادم (${res.status})`,
+        );
+        return;
+      }
+
+      if (!res.ok || !json.success) {
         setError(json.message || "بيانات الدخول غير صحيحة");
         return;
       }
