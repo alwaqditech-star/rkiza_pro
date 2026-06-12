@@ -1,8 +1,7 @@
+import { ensureApiToken, getApiToken } from '@/lib/session-bridge';
+
 /** مصدر البيانات — كل العمليات عبر هذا العنوان */
 export const API_URL = 'https://rkiza-api.vercel.app';
-
-const API_TOKEN_KEY = 'rikaz_api_token';
-
 export function getApiBaseUrl(): string {
   const fromEnv =
     (typeof window !== 'undefined'
@@ -23,8 +22,7 @@ export function apiUrl(path: string): string {
 }
 
 function readBearerToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return sessionStorage.getItem(API_TOKEN_KEY);
+  return getApiToken();
 }
 
 /** طلب API موحّد — GET / POST / PUT / DELETE */
@@ -32,6 +30,10 @@ export async function apiFetch(
   path: string,
   init: RequestInit = {},
 ): Promise<Response> {
+  if (typeof window !== 'undefined') {
+    await ensureApiToken();
+  }
+
   const headers = new Headers(init.headers);
 
   if (

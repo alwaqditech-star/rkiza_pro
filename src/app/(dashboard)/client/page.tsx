@@ -61,7 +61,7 @@ function ClientDashboardContent() {
       setError(json.message || "فشل تحميل البيانات");
     } catch {
       setData(null);
-      setError("لا يمكن الاتصال بخادم API — تأكد من تشغيل api_project");
+      setError("تعذّر الاتصال بخادم API — تحقق من rkiza-api.vercel.app");
     } finally {
       setLoading(false);
     }

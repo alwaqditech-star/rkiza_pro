@@ -1,12 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
-import { hydrateApiTokenFromSession } from "@/lib/session-bridge";
+import { useLayoutEffect } from "react";
+import {
+  hydrateApiTokenFromSession,
+  storeApiToken,
+} from "@/lib/session-bridge";
 
-export function SessionHydrator() {
-  useEffect(() => {
+interface SessionHydratorProps {
+  initialToken?: string;
+}
+
+export function SessionHydrator({ initialToken }: SessionHydratorProps) {
+  useLayoutEffect(() => {
+    if (initialToken) {
+      storeApiToken(initialToken);
+      return;
+    }
+
     void hydrateApiTokenFromSession();
-  }, []);
+  }, [initialToken]);
 
   return null;
 }

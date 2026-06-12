@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { IconBuildingCommunity, IconChartBar } from "@tabler/icons-react";
 import { AdminUserLink } from "@/components/admin/AdminUserLink";
 import { SessionHydrator } from "@/components/SessionHydrator";
-import { getSessionFromCookie } from "@/lib/auth";
+import { getSessionFromCookie, AUTH_COOKIE_NAME } from "@/lib/auth";
 import { AdminLogoutButton } from "./AdminLogoutButton";
 import { AdminNav } from "./AdminNav";
 
@@ -16,11 +17,13 @@ export default async function AdminLayout({
     redirect("/");
   }
 
+  const cookieStore = await cookies();
+  const apiToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   const avatarUrl: string | null = session.avatar_url ?? null;
 
   return (
     <>
-      <SessionHydrator />
+      <SessionHydrator initialToken={apiToken} />
       <aside id="sidebar">
         <div className="sb-logo">
           <div className="sb-logo-mark">
