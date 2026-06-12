@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import type { AdminSession, AuthSession, ClientSession } from '@/lib/types';
+import { getJwtSecret } from '@/lib/jwt-secret';
 import {
   getClientPermissions,
   type ClientPermissions,
@@ -12,14 +13,6 @@ export type { AdminSession, ClientSession, AuthSession };
 export const AUTH_COOKIE_NAME = 'rikaz_token';
 const BCRYPT_ROUNDS = 10;
 const TOKEN_EXPIRY = '7d';
-
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET environment variable is not set');
-  }
-  return secret;
-}
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_ROUNDS);

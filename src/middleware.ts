@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { AUTH_COOKIE_NAME } from "@/lib/auth";
+import { getJwtSecret } from "@/lib/jwt-secret";
 import type { AuthSession } from "@/lib/types";
 import {
   canAccessClientPath,
@@ -12,7 +13,7 @@ import {
 async function verifyRequestToken(
   token: string,
 ): Promise<AuthSession | null> {
-  const secret = process.env.JWT_SECRET;
+  const secret = getJwtSecret();
   if (!secret) return null;
 
   try {
