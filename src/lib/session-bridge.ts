@@ -28,7 +28,13 @@ export async function syncSessionCookie(token: string): Promise<void> {
     body: JSON.stringify({ token }),
   });
   if (!res.ok) {
-    throw new Error('فشل حفظ الجلسة');
+    const json = (await res.json().catch(() => null)) as {
+      message?: string;
+    } | null;
+    throw new Error(
+      json?.message ||
+        'فشل حفظ الجلسة — تأكد من تطابق JWT_SECRET بين rkiza-pro و rkiza-api على Vercel',
+    );
   }
 }
 

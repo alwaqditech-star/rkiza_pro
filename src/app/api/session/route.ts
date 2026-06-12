@@ -25,9 +25,20 @@ export async function POST(request: Request) {
     const response = NextResponse.json({ success: true });
     response.cookies.set(AUTH_COOKIE_NAME, token, cookieOptions);
     return response;
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'توكن غير صالح';
+    if (message.includes('JWT_SECRET')) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'JWT_SECRET غير مضبوط على rkiza-pro — انسخ نفس القيمة من مشروع rkiza-api على Vercel',
+        },
+        { status: 500 },
+      );
+    }
     return NextResponse.json(
-      { success: false, message: 'توكن غير صالح' },
+      { success: false, message: 'توكن غير صالح — JWT_SECRET على rkiza-pro لا يطابق rkiza-api' },
       { status: 401 },
     );
   }

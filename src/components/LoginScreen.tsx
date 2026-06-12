@@ -69,8 +69,10 @@ export function LoginScreen() {
       }
 
       window.location.assign(target);
-    } catch {
-      setError("خطأ في الاتصال بالخادم");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "خطأ في الاتصال بالخادم";
+      setError(message || "خطأ في الاتصال بالخادم");
     } finally {
       setLoading(false);
     }
