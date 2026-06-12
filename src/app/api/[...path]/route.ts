@@ -40,7 +40,7 @@ async function proxyToApiProject(
       {
         success: false,
         message:
-          'لا يمكن الاتصال بخادم API — تحقق من rkiza-api.vercel.app أو شغّل api_project محلياً',
+          'لا يمكن الاتصال بخادم API — تحقق من https://rkiza-api.vercel.app/api/health',
         error: message,
       },
       { status: 503 },

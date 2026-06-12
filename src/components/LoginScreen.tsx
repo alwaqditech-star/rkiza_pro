@@ -108,7 +108,7 @@ export function LoginScreen() {
           <strong>مهم:</strong> الحقل الأول = <strong>username</strong> من قاعدة البيانات،
           وليس <strong>association_name</strong>.
           <br />
-          افتح المشروع من: <strong dir="ltr">http://localhost:3000</strong>
+          API: <strong dir="ltr">rkiza-api.vercel.app</strong>
           <br />
           <button
             type="button"
