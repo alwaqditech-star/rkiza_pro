@@ -1,12 +1,11 @@
-/** عنوان API المنشور على Vercel */
-export const PRODUCTION_API_URL = 'https://rkiza-api.vercel.app';
+/** مصدر البيانات — API المنشور على Vercel */
+export const API_URL = 'https://rkiza-api.vercel.app';
 
-/** يُستخدم من الوكيل في src/app/api/[...path]/route.ts */
+/** عنوان API الذي تستخدمه الواجهة (الوكيل في /api/*) */
 export function getApiBaseUrl(): string {
-  const raw =
+  const fromEnv =
     process.env.API_BASE_URL?.trim() ||
-    process.env.NEXT_PUBLIC_API_URL?.trim() ||
-    PRODUCTION_API_URL;
+    process.env.NEXT_PUBLIC_API_URL?.trim();
 
-  return raw.replace(/\/$/, '');
+  return (fromEnv || API_URL).replace(/\/$/, '');
 }

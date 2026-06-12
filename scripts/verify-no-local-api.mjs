@@ -45,4 +45,4 @@ if (!routes.some((f) => f.endsWith(`${path.sep}[...path]${path.sep}route.ts`))) 
   process.exit(1);
 }
 
-console.log('[OK] الواجهة تمرّر /api/* إلى api_project فقط');
+console.log('[OK] الواجهة تمرّر /api/* إلى https://rkiza-api.vercel.app');

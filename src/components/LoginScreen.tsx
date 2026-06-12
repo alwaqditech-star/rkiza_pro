@@ -42,10 +42,16 @@ export function LoginScreen() {
         return;
       }
 
+      const data = json.data;
+      if (!data) {
+        setError("استجابة غير صالحة من الخادم");
+        return;
+      }
+
       let target = "/client";
-      if (json.data.role === "admin") {
+      if (data.role === "admin") {
         target = "/admin";
-      } else if (json.data.is_first_login) {
+      } else if (data.is_first_login) {
         target = "/client/first-login";
       }
 

@@ -17,6 +17,7 @@ async function proxyToApiProject(
     method: request.method,
     headers,
     redirect: 'manual',
+    credentials: 'include',
   };
 
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -30,6 +31,13 @@ async function proxyToApiProject(
     const upstream = await fetch(targetUrl, init);
 
     const responseHeaders = new Headers(upstream.headers);
+    // تمرير cookies من rkiza-api إلى المتصفح (تسجيل الدخول)
+    const setCookies = upstream.headers.getSetCookie?.() ?? [];
+    responseHeaders.delete('set-cookie');
+    for (const cookie of setCookies) {
+      responseHeaders.append('set-cookie', cookie);
+    }
+
     return new NextResponse(upstream.body, {
       status: upstream.status,
       headers: responseHeaders,
