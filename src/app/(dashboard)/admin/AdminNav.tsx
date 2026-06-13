@@ -15,7 +15,11 @@ const navItems: { href: string; label: string; icon: TablerIcon }[] = [
   { href: "/admin/profile", label: "الملف الشخصي", icon: IconUserCircle },
 ];
 
-export function AdminNav() {
+interface AdminNavProps {
+  onNavigate?: () => void;
+}
+
+export function AdminNav({ onNavigate }: AdminNavProps) {
   const pathname = usePathname();
 
   return (
@@ -30,6 +34,7 @@ export function AdminNav() {
             key={item.href}
             href={item.href}
             className={`sb-item${active ? " active" : ""}`}
+            onClick={onNavigate}
           >
             <item.icon size={18} stroke={1.8} />
             {item.label}
