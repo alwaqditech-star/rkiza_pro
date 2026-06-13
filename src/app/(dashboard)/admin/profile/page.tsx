@@ -8,6 +8,7 @@ import {
   IconDeviceFloppy,
   IconUserCircle,
 } from "@tabler/icons-react";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface AdminProfile {
   id: number;
@@ -116,86 +117,32 @@ export default function AdminProfilePage() {
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="tbl-empty">جاري تحميل الملف الشخصي...</div>
-      </div>
+      <AppPage>
+        <div className="card">
+          <div className="tbl-empty">جاري تحميل الملف الشخصي...</div>
+        </div>
+      </AppPage>
     );
   }
 
   return (
-    <>
-      {error && (
-        <div
-          style={{
-            background: "var(--ruby-pale)",
-            color: "var(--ruby)",
-            padding: "10px 14px",
-            borderRadius: "var(--radius-sm)",
-            marginBottom: 12,
-            fontSize: 13,
-            fontWeight: 600,
-          }}
-        >
-          {error}
-        </div>
-      )}
-      {success && (
-        <div
-          style={{
-            background: "var(--emerald-pale)",
-            color: "var(--emerald)",
-            padding: "10px 14px",
-            borderRadius: "var(--radius-sm)",
-            marginBottom: 12,
-            fontSize: 13,
-            fontWeight: 600,
-          }}
-        >
-          {success}
-        </div>
-      )}
+    <AppPage>
+      {error ? <div className="page-alert error">{error}</div> : null}
+      {success ? <div className="page-alert success">{success}</div> : null}
+
+      <PageHero
+        kicker="حساب المدير"
+        title="الملف الشخصي"
+        description="تحديث اسم المستخدم وكلمة المرور وصورة الحساب"
+      />
 
       <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <IconUserCircle size={18} stroke={1.8} />
-            الملف الشخصي — مدير النظام
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              marginBottom: 24,
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 120,
-                height: 120,
-                borderRadius: "50%",
-                overflow: "hidden",
-                border: "3px solid var(--silver)",
-                background: "var(--teal-pale)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 42,
-                fontWeight: 700,
-                color: "var(--teal-dark)",
-              }}
-            >
+          <div className="profile-avatar-wrap">
+            <div className="profile-avatar">
               {avatarPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={avatarPreview}
-                  alt="صورة المدير"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
+                <img src={avatarPreview} alt="صورة المدير" />
               ) : (
                 (profile?.name || profile?.username || "م").charAt(0)
               )}
@@ -215,7 +162,7 @@ export default function AdminProfilePage() {
               <IconCamera size={16} stroke={1.8} />
               {avatarPreview ? "تغيير الصورة" : "إضافة صورة"}
             </button>
-            <div style={{ fontSize: 11, color: "var(--mist)" }}>
+            <div className="profile-avatar-hint">
               JPG أو PNG — حتى 2 ميجابايت
             </div>
           </div>
@@ -274,6 +221,6 @@ export default function AdminProfilePage() {
           </div>
         </form>
       </div>
-    </>
+    </AppPage>
   );
 }

@@ -11,6 +11,7 @@ import {
   IconTrash,
   IconUserPlus,
 } from "@tabler/icons-react";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface Association {
   id: number;
@@ -264,44 +265,21 @@ export default function SubscribersPage() {
   }
 
   return (
-    <>
-      {error && (
-        <div
-          style={{
-            background: "var(--ruby-pale)",
-            color: "var(--ruby)",
-            padding: "10px 14px",
-            borderRadius: "var(--radius-sm)",
-            marginBottom: 12,
-            fontSize: 13,
-            fontWeight: 600,
-          }}
-        >
-          {error}
-        </div>
-      )}
-      {success && (
-        <div
-          style={{
-            background: "var(--emerald-pale)",
-            color: "var(--emerald)",
-            padding: "10px 14px",
-            borderRadius: "var(--radius-sm)",
-            marginBottom: 12,
-            fontSize: 13,
-            fontWeight: 600,
-          }}
-        >
-          {success}
-        </div>
-      )}
+    <AppPage>
+      <PageHero
+        kicker="إدارة المشتركين"
+        title="اشتراكات الجمعيات"
+        description="إنشاء حسابات جمعيات جديدة ومتابعة الاشتراكات والتجديد"
+        stat={{ value: associations.length, label: "جمعية مسجلة" }}
+      />
+
+      {error ? <div className="page-alert error">{error}</div> : null}
+      {success ? <div className="page-alert success">{success}</div> : null}
 
       <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <IconUserPlus size={18} stroke={1.8} />
-            إضافة جمعية جديدة
-          </div>
+        <div className="card-section-title">
+          <IconUserPlus size={18} stroke={1.8} />
+          إضافة جمعية جديدة
         </div>
         <form onSubmit={handleCreate}>
           <div className="form-grid">
@@ -332,15 +310,7 @@ export default function SubscribersPage() {
         </form>
 
         {credentials && (
-          <div
-            style={{
-              marginTop: 16,
-              padding: 14,
-              background: "var(--teal-pale)",
-              borderRadius: "var(--radius-md)",
-              border: "1px solid var(--silver)",
-            }}
-          >
+          <div className="credentials-box">
             <div style={{ fontWeight: 700, marginBottom: 8, color: "var(--teal-dark)" }}>
               بيانات الدخول — {credentials.association_name}
             </div>
@@ -363,8 +333,8 @@ export default function SubscribersPage() {
       </div>
 
       <div className="card">
-        <div className="card-header">
-          <div className="card-title">
+        <div className="card-toolbar">
+          <div className="card-section-title">
             <IconRefresh size={18} stroke={1.8} />
             قائمة المشتركين
           </div>
@@ -564,6 +534,6 @@ export default function SubscribersPage() {
           </div>
         </div>
       )}
-    </>
+    </AppPage>
   );
 }

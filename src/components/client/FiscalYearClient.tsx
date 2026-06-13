@@ -10,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { fmtAmt, fmtDate } from "@/lib/format";
 import type { FiscalStatus } from "@/lib/types";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 export function FiscalYearClient() {
   const [status, setStatus] = useState<FiscalStatus | null>(null);
@@ -69,16 +70,21 @@ export function FiscalYearClient() {
   }
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-title">
-          <IconCalendarStats size={18} stroke={1.8} />
-          إدارة السنة المالية
-        </div>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="الإعدادات المالية"
+        title="إدارة السنة المالية"
+        description="متابعة السنة الحالية وإقفال السنوات السابقة وفتح سنة جديدة"
+        stat={
+          status
+            ? { value: status.current_fiscal_year, label: "السنة الحالية" }
+            : undefined
+        }
+      />
 
+      <div className="card">
       {message ? (
-        <div style={{ padding: "10px 16px", fontSize: 13, color: "var(--teal-dark)" }}>{message}</div>
+        <div className="page-alert success">{message}</div>
       ) : null}
 
       {loading || !status ? (
@@ -234,6 +240,7 @@ export function FiscalYearClient() {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </AppPage>
   );
 }

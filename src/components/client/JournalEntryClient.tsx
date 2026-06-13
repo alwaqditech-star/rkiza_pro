@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { fmtAmt, today } from "@/lib/format";
 import { useClientPermissions } from "./ClientPermissionsContext";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface CoaOption {
   account_code: string;
@@ -154,11 +155,13 @@ export function JournalEntryClient() {
   }
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-title">قيد اليومية الجديد</div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {canWrite ? (
+    <AppPage>
+      <PageHero
+        kicker="المحاسبة"
+        title="قيد اليومية الجديد"
+        description="إنشاء قيد محاسبي يدوي متوازن بين المدين والدائن"
+        actions={
+          canWrite ? (
             <>
               <button type="button" className="btn btn-ghost btn-sm" onClick={resetForm}>
                 <IconRefresh size={16} stroke={1.8} />
@@ -166,7 +169,7 @@ export function JournalEntryClient() {
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-primary btn-sm"
                 disabled={saving}
                 onClick={handleSave}
               >
@@ -174,9 +177,11 @@ export function JournalEntryClient() {
                 {saving ? "جاري الحفظ..." : "حفظ القيد"}
               </button>
             </>
-          ) : null}
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
+
+      <div className="card">
 
       <div className="form-grid" style={{ marginBottom: 14 }}>
         <div className="form-group">
@@ -305,6 +310,7 @@ export function JournalEntryClient() {
           {success}
         </div>
       ) : null}
-    </div>
+      </div>
+    </AppPage>
   );
 }

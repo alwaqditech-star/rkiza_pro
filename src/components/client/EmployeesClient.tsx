@@ -17,6 +17,7 @@ import { employeesFilename } from "@/lib/export-filenames";
 import type { Employee, EmployeeStatus } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { ReportExportButtons } from "./ReportExportButtons";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 const emptyForm = {
   name: "",
@@ -134,14 +135,14 @@ export function EmployeesClient() {
   }
 
   return (
-    <>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <IconUsersGroup size={18} stroke={1.8} />
-            سجلات الموظفين
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+    <AppPage>
+      <PageHero
+        kicker="الموارد البشرية"
+        title="سجلات الموظفين"
+        description="إدارة بيانات الموظفين والرواتب والبدلات"
+        stat={{ value: employees.length, label: "موظف" }}
+        actions={
+          <>
             <ReportExportButtons
               disabled={loading || employees.length === 0}
               buildExportUrl={(format) => `/api/client/employees/export-${format}`}
@@ -153,9 +154,11 @@ export function EmployeesClient() {
                 إضافة موظف
               </button>
             ) : null}
-          </div>
-        </div>
+          </>
+        }
+      />
 
+      <div className="card">
         <div className="tbl-wrap">
           <table>
             <thead>
@@ -367,6 +370,6 @@ export function EmployeesClient() {
           </div>
         </div>
       </div>
-    </>
+    </AppPage>
   );
 }

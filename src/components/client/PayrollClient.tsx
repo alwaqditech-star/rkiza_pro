@@ -14,6 +14,7 @@ import { payrollFilename } from "@/lib/export-filenames";
 import type { Employee, PayrollPreview } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { ReportExportButtons } from "./ReportExportButtons";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 const MONTHS = [
   { value: "01", label: "يناير" },
@@ -78,76 +79,60 @@ export function PayrollClient() {
   const employees: Employee[] = preview?.employees ?? [];
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-title">
-          <IconCash size={18} stroke={1.8} />
-          مسير الرواتب
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <ReportExportButtons
-            disabled={loading || !preview || preview.employees.length === 0}
-            buildExportUrl={(format) =>
-              `/api/client/payroll/export-${format}?month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`
-            }
-            buildFilename={(extension) => payrollFilename(month, Number(year), extension)}
-          />
-          <select
-            value={month}
-            onChange={(e) => {
-              setMonth(e.target.value);
-              setGenerated(false);
-            }}
-            style={{
-              padding: "7px 12px",
-              border: "1.5px solid var(--silver)",
-              borderRadius: "var(--radius-sm)",
-              fontFamily: "var(--font)",
-              fontSize: 13,
-            }}
-          >
-            {MONTHS.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            value={year}
-            onChange={(e) => {
-              setYear(e.target.value);
-              setGenerated(false);
-            }}
-            placeholder="السنة"
-            style={{
-              padding: "7px 10px",
-              border: "1.5px solid var(--silver)",
-              borderRadius: "var(--radius-sm)",
-              fontFamily: "var(--font)",
-              fontSize: 13,
-              width: 90,
-            }}
-          />
-          {canWrite ? (
-            <button type="button" className="btn btn-primary btn-sm" onClick={handleGenerate}>
-              <IconRefresh size={14} />
-              إنشاء المسير
-            </button>
-          ) : null}
-        </div>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="الرواتب"
+        title="مسير الرواتب"
+        description="إنشاء مسير رواتب شهري وترحيله كقيد محاسبي"
+        stat={{ value: employees.length, label: "موظف في المسير" }}
+        actions={
+          <>
+            <ReportExportButtons
+              disabled={loading || !preview || preview.employees.length === 0}
+              buildExportUrl={(format) =>
+                `/api/client/payroll/export-${format}?month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`
+              }
+              buildFilename={(extension) => payrollFilename(month, Number(year), extension)}
+            />
+            <select
+              value={month}
+              onChange={(e) => {
+                setMonth(e.target.value);
+                setGenerated(false);
+              }}
+              className="coa-search-input"
+              style={{ width: "auto", minWidth: 120 }}
+            >
+              {MONTHS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              value={year}
+              onChange={(e) => {
+                setYear(e.target.value);
+                setGenerated(false);
+              }}
+              placeholder="السنة"
+              className="coa-search-input"
+              style={{ width: 90 }}
+            />
+            {canWrite ? (
+              <button type="button" className="btn btn-primary btn-sm" onClick={handleGenerate}>
+                <IconRefresh size={14} />
+                إنشاء المسير
+              </button>
+            ) : null}
+          </>
+        }
+      />
 
+      <div className="card">
       {message ? (
-        <div
-          style={{
-            padding: "10px 16px",
-            fontSize: 13,
-            color: message.includes("تم") ? "var(--emerald)" : "var(--ruby)",
-          }}
-        >
-          {message}
-        </div>
+        <div className={`page-alert ${message.includes("تم") ? "success" : "error"}`}>{message}</div>
       ) : null}
 
       {loading ? (
@@ -333,6 +318,7 @@ export function PayrollClient() {
           لا توجد بيانات
         </div>
       )}
-    </div>
+      </div>
+    </AppPage>
   );
 }

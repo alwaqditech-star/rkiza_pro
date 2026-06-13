@@ -6,6 +6,7 @@ import { IconInbox, IconRefresh, IconScale } from "@tabler/icons-react";
 import { trialBalanceFilename } from "@/lib/export-filenames";
 import { fmtAmt } from "@/lib/format";
 import { ReportExportButtons } from "./ReportExportButtons";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface TrialRow {
   account_code: string;
@@ -45,43 +46,37 @@ export function TrialBalanceClient() {
   const balanced = Math.abs(totalDebit - totalCredit) < 0.01;
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-title">
-          <IconScale size={18} stroke={1.8} />
-          ميزان المراجعة
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <ReportExportButtons
-            disabled={loading || rows.length === 0}
-            buildExportUrl={(format) => {
-              const params = new URLSearchParams();
-              if (from) params.set("from", from);
-              if (to) params.set("to", to);
-              const query = params.toString();
-              return `/api/client/trial/export-${format}${query ? `?${query}` : ""}`;
-            }}
-            buildFilename={(extension) =>
-              trialBalanceFilename(from || undefined, to || undefined, extension)
-            }
-          />
-          <button type="button" className="btn btn-ghost btn-sm" onClick={loadData}>
-            <IconRefresh size={16} stroke={1.8} />
-            تحديث
-          </button>
-        </div>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="التقارير المالية"
+        title="ميزان المراجعة"
+        description="عرض أرصدة الحسابات المدينة والدائنة لفترة محددة"
+        stat={{ value: rows.length, label: "حساب" }}
+        actions={
+          <>
+            <ReportExportButtons
+              disabled={loading || rows.length === 0}
+              buildExportUrl={(format) => {
+                const params = new URLSearchParams();
+                if (from) params.set("from", from);
+                if (to) params.set("to", to);
+                const query = params.toString();
+                return `/api/client/trial/export-${format}${query ? `?${query}` : ""}`;
+              }}
+              buildFilename={(extension) =>
+                trialBalanceFilename(from || undefined, to || undefined, extension)
+              }
+            />
+            <button type="button" className="btn btn-ghost btn-sm" onClick={loadData}>
+              <IconRefresh size={16} stroke={1.8} />
+              تحديث
+            </button>
+          </>
+        }
+      />
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "12px 0",
-          borderBottom: "1px solid var(--fog)",
-          flexWrap: "wrap",
-        }}
-      >
+      <div className="card">
+      <div className="filter-bar">
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--slate)", whiteSpace: "nowrap" }}>
             الفترة من:
@@ -182,6 +177,7 @@ export function TrialBalanceClient() {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </AppPage>
   );
 }

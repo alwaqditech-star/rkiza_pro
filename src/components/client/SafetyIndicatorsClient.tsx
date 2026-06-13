@@ -18,6 +18,7 @@ import {
 } from "@/lib/safety-indicators";
 import type { SafetyFinancialInput } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 const emptyInput = (year: number): SafetyFinancialInput => ({
   association_id: 0,
@@ -113,104 +114,58 @@ export function SafetyIndicatorsClient() {
   };
 
   return (
-    <>
-      <div
-        style={{
-          background: "linear-gradient(135deg,#0F1C33 0%,#1B2A4A 60%,#2C4A7C 100%)",
-          borderRadius: "var(--radius-xl)",
-          padding: "22px 28px",
-          marginBottom: 20,
-          position: "relative",
-          overflow: "hidden",
-          color: "#fff",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -30,
-            left: -30,
-            width: 140,
-            height: 140,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,.06)",
-          }}
-        />
-        <div style={{ position: "relative" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <IconShieldCheck size={24} stroke={1.8} />
-            <h2 style={{ fontSize: 20, fontWeight: 700 }}>مؤشرات السلامة المالية</h2>
-          </div>
-          <p style={{ fontSize: 13, opacity: 0.8 }}>
-            نموذج احتساب نسب معيار السلامة المالية للجمعيات — 11 مؤشراً على 5 محاور
-          </p>
-        </div>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="الحوكمة المالية"
+        title="مؤشرات السلامة المالية"
+        description="نموذج احتساب نسب معيار السلامة المالية للجمعيات — 11 مؤشراً على 5 محاور"
+        variant="slate"
+        stat={
+          results
+            ? { value: `${results.pct}%`, label: results.scoreLabel }
+            : undefined
+        }
+      />
 
       {results ? (
-        <div style={{ marginBottom: 16 }}>
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid var(--silver)",
-              borderRadius: "var(--radius-xl)",
-              padding: "20px 24px",
-              display: "flex",
-              alignItems: "center",
-              gap: 24,
-              flexWrap: "wrap",
-            }}
-          >
-            <div className={`score-ring ${results.scoreClass}`}>
-              <span style={{ lineHeight: 1 }}>{results.pct}%</span>
-              <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>
-                {results.scoreLabel}
-              </span>
-            </div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--ink)", marginBottom: 8 }}>
-                الدرجة الإجمالية للسلامة المالية
-              </div>
+        <div className="safety-score-card">
+          <div className={`score-ring ${results.scoreClass}`}>
+            <span style={{ lineHeight: 1 }}>{results.pct}%</span>
+            <span style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>
+              {results.scoreLabel}
+            </span>
+          </div>
+          <div className="safety-score-body">
+            <div className="safety-score-title">الدرجة الإجمالية للسلامة المالية</div>
+            <div className="safety-score-bar">
               <div
+                className="safety-score-fill"
                 style={{
-                  background: "var(--fog)",
-                  borderRadius: 6,
-                  height: 10,
-                  overflow: "hidden",
-                  marginBottom: 10,
+                  width: `${results.pct}%`,
+                  background: colorMap[results.scoreClass],
                 }}
-              >
-                <div
-                  style={{
-                    width: `${results.pct}%`,
-                    height: "100%",
-                    background: colorMap[results.scoreClass],
-                    borderRadius: 6,
-                    transition: "width .6s",
-                  }}
-                />
-              </div>
-              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--emerald)" }}>
-                  <IconCheck size={14} style={{ display: "inline" }} /> {results.passCount} محققة
+              />
+            </div>
+            <div className="safety-score-meta">
+              <span style={{ color: "var(--emerald)" }}>
+                <IconCheck size={14} style={{ display: "inline" }} /> {results.passCount} محققة
+              </span>
+              <span style={{ color: "var(--ruby)" }}>
+                <IconX size={14} style={{ display: "inline" }} /> {results.failCount} غير محققة
+              </span>
+              {results.naCount > 0 ? (
+                <span style={{ color: "var(--mist)" }}>
+                  <IconMinus size={14} style={{ display: "inline" }} /> {results.naCount} لا تنطبق
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ruby)" }}>
-                  <IconX size={14} style={{ display: "inline" }} /> {results.failCount} غير محققة
-                </span>
-                {results.naCount > 0 ? (
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mist)" }}>
-                    <IconMinus size={14} style={{ display: "inline" }} /> {results.naCount} لا تنطبق
-                  </span>
-                ) : null}
-              </div>
+              ) : null}
             </div>
           </div>
         </div>
       ) : null}
 
       <div className="card">
-        <div className="card-header">
-          <div className="card-title">
+        <div className="card-toolbar">
+          <div className="card-section-title">
             <IconCalculator size={18} stroke={1.8} />
             المدخلات المالية
           </div>
@@ -394,6 +349,6 @@ export function SafetyIndicatorsClient() {
           ))}
         </div>
       ) : null}
-    </>
+    </AppPage>
   );
 }

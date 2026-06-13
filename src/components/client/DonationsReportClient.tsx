@@ -15,6 +15,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { fmtAmt, fmtDate } from "@/lib/format";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface VoucherRow {
   voucher_number: string;
@@ -159,15 +160,17 @@ export function DonationsReportClient() {
       : "";
 
   return (
-    <>
-      <div className="report-banner">
-        <h2>
-          <IconHeart size={22} style={{ display: "inline", marginLeft: 8 }} />
-          تقرير التبرعات والإيرادات
-        </h2>
-        <p>ملخص شامل لجميع التبرعات والإيرادات المسجلة{periodLabel}</p>
-        <div className="report-date">تاريخ التقرير: {reportDateLabel()}</div>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="التقارير المالية"
+        title="تقرير التبرعات والإيرادات"
+        description={`ملخص شامل لجميع التبرعات والإيرادات المسجلة${periodLabel} · تاريخ التقرير: ${reportDateLabel()}`}
+        variant="emerald"
+        stats={[
+          { value: fmtAmt(totalDonations), label: "إجمالي التبرعات (ر.س)" },
+          { value: filtered.length, label: "عدد السندات" },
+        ]}
+      />
 
       <PeriodFilter
         prefix="don-rep"
@@ -310,6 +313,6 @@ export function DonationsReportClient() {
           </div>
         </>
       )}
-    </>
+    </AppPage>
   );
 }

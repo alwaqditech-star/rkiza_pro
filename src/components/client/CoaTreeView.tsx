@@ -1,15 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { IconChevronDown, IconChevronLeft } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronLeft,
+  IconChevronsDown,
+  IconChevronsUp,
+  IconListTree,
+  IconSearch,
+} from "@tabler/icons-react";
 import { COA } from "@/lib/coa-data";
-
-const groupColors: Record<string, string> = {
-  "1": "#1B2A4A",
-  "2": "#2C4A7C",
-  "3": "#c9973a",
-  "4": "#b03050",
-};
 
 type CoaAccount = { code: string; name: string };
 type CoaSubNode = {
@@ -19,6 +19,16 @@ type CoaSubNode = {
   accs?: CoaAccount[];
 };
 type CoaGroup = { code: string; name: string; subs: CoaSubNode[] };
+
+const GROUP_META: Record<
+  string,
+  { tone: string; typeLabel: string; description: string }
+> = {
+  "1": { tone: "teal", typeLabel: "أصول", description: "ممتلكات وحقوق للجمعية" },
+  "2": { tone: "slate", typeLabel: "التزامات", description: "مطلوبات وذمم دائنة" },
+  "3": { tone: "gold", typeLabel: "إيرادات", description: "تبرعات وإيرادات نشاط" },
+  "4": { tone: "ruby", typeLabel: "مصروفات", description: "تكاليف وبرامج وأنشطة" },
+};
 
 function matchesSearch(text: string, query: string) {
   return text.toLowerCase().includes(query) || text.includes(query);
@@ -59,15 +69,141 @@ function filterCoaGroups(query: string): CoaGroup[] {
     .filter((group): group is CoaGroup => group !== null);
 }
 
+function countAccounts(node: CoaSubNode): number {
+  let total = node.accs?.length ?? 0;
+  node.subs?.forEach((child) => {
+    total += countAccounts(child);
+  });
+  return total;
+}
+
+function collectOpenIds(groups: CoaGroup[]): Record<string, boolean> {
+  const ids: Record<string, boolean> = {};
+  groups.forEach((group) => {
+    ids[`g${group.code}`] = true;
+    group.subs.forEach((sub) => {
+      ids[`s${sub.code}`] = true;
+      sub.subs?.forEach((nested) => {
+        ids[`ss${nested.code}`] = true;
+      });
+    });
+  });
+  return ids;
+}
+
+function CoaAccountList({ accounts }: { accounts: CoaAccount[] }) {
+  return (
+    <div className="coa-accounts open">
+      {accounts.map((acc) => (
+        <div className="coa-acc-row" key={acc.code}>
+          <span className="coa-acc-name">{acc.name}</span>
+          <span className="coa-acc-code">{acc.code}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CoaNestedSection({
+  node,
+  toggle,
+  isOpen,
+}: {
+  node: CoaSubNode;
+  toggle: (id: string) => void;
+  isOpen: (id: string) => boolean;
+}) {
+  const id = `ss${node.code}`;
+
+  return (
+    <div className="coa-nested-group">
+      <div
+        className={`coa-nested-head${isOpen(id) ? " open" : ""}`}
+        onClick={() => toggle(id)}
+        onKeyDown={(e) => e.key === "Enter" && toggle(id)}
+        role="button"
+        tabIndex={0}
+      >
+        <span className="coa-nested-title">{node.name}</span>
+        <span className="coa-sub-code">{node.code}</span>
+        <IconChevronLeft
+          size={12}
+          className={`coa-chevron nested${isOpen(id) ? " open" : ""}`}
+        />
+      </div>
+      {isOpen(id) && node.accs ? <CoaAccountList accounts={node.accs} /> : null}
+    </div>
+  );
+}
+
+function CoaSubSection({
+  sub,
+  groupTone,
+  toggle,
+  isOpen,
+}: {
+  sub: CoaSubNode;
+  groupTone: string;
+  toggle: (id: string) => void;
+  isOpen: (id: string) => boolean;
+}) {
+  const id = `s${sub.code}`;
+  const accountCount = countAccounts(sub);
+
+  return (
+    <div className={`coa-sub-group coa-sub-tone-${groupTone}`}>
+      <div
+        className={`coa-sub-head${isOpen(id) ? " open" : ""}`}
+        onClick={() => toggle(id)}
+        onKeyDown={(e) => e.key === "Enter" && toggle(id)}
+        role="button"
+        tabIndex={0}
+      >
+        <div className="coa-sub-head-main">
+          <span className="coa-sub-title">{sub.name}</span>
+          <span className="coa-sub-code">{sub.code}</span>
+          {accountCount > 0 ? (
+            <span className="coa-count-chip">{accountCount} حساب</span>
+          ) : null}
+        </div>
+        <IconChevronLeft size={13} className={`coa-chevron${isOpen(id) ? " open" : ""}`} />
+      </div>
+
+      {isOpen(id) ? (
+        <div className="coa-sub-body">
+          {sub.subs?.map((nested) => (
+            <CoaNestedSection
+              key={nested.code}
+              node={nested}
+              toggle={toggle}
+              isOpen={isOpen}
+            />
+          ))}
+          {sub.accs ? <CoaAccountList accounts={sub.accs} /> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function CoaTreeView() {
   const [search, setSearch] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
+  const allGroups = COA as unknown as CoaGroup[];
   const normalizedSearch = search.trim().toLowerCase();
   const filteredCoa = useMemo(
     () => filterCoaGroups(normalizedSearch),
     [normalizedSearch],
   );
+
+  const stats = useMemo(() => {
+    const totalAccounts = allGroups.reduce(
+      (sum, group) => sum + group.subs.reduce((s, sub) => s + countAccounts(sub), 0),
+      0,
+    );
+    return { groups: allGroups.length, totalAccounts };
+  }, [allGroups]);
 
   function toggle(id: string) {
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -77,137 +213,131 @@ export function CoaTreeView() {
     return normalizedSearch ? true : !!openGroups[id];
   }
 
+  function expandAll() {
+    setOpenGroups(collectOpenIds(filteredCoa));
+  }
+
+  function collapseAll() {
+    setOpenGroups({});
+  }
+
   return (
-    <>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="بحث في الحسابات..."
-          style={{
-            padding: "7px 12px",
-            border: "1.5px solid var(--silver)",
-            borderRadius: "var(--radius-sm)",
-            fontFamily: "var(--font)",
-            fontSize: 13,
-            width: 200,
-          }}
-        />
-      </div>
-      <div id="coa-tree">
-        {filteredCoa.map((group) => (
-          <div className="coa-group" key={group.code}>
-            <div
-              className={`coa-group-head${isOpen(`g${group.code}`) ? " open" : ""}`}
-              onClick={() => toggle(`g${group.code}`)}
-              onKeyDown={(e) => e.key === "Enter" && toggle(`g${group.code}`)}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="coa-head-left">
-                <span
-                  className="coa-code-badge"
-                  style={{ background: groupColors[group.code] || "var(--teal)" }}
-                >
-                  {group.code}
-                </span>
-                <span className="coa-group-title">{group.name}</span>
-              </div>
-              <IconChevronDown
-                size={14}
-                className={`coa-chevron${isOpen(`g${group.code}`) ? " open" : ""}`}
-              />
-            </div>
-            {isOpen(`g${group.code}`) ? (
-              <div className="coa-group-body open">
-                {group.subs.map((sub) => (
-                  <div className="coa-sub-group" key={sub.code} style={{ margin: "8px 12px" }}>
-                    <div
-                      className="coa-sub-head"
-                      onClick={() => toggle(`s${sub.code}`)}
-                      onKeyDown={(e) => e.key === "Enter" && toggle(`s${sub.code}`)}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <span className="coa-sub-title">{sub.name}</span>
-                        <span className="coa-sub-code">{sub.code}</span>
-                      </div>
-                      <IconChevronLeft size={12} className="coa-chevron" />
-                    </div>
-                    {sub.subs
-                      ? sub.subs.map((ss) => (
-                          <div
-                            key={ss.code}
-                            style={{
-                              margin: "4px 12px 4px 0",
-                              border: "1px solid var(--fog)",
-                              borderRadius: 6,
-                              overflow: "hidden",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                padding: "7px 12px",
-                                background: "var(--snow)",
-                                cursor: "pointer",
-                                fontSize: 12.5,
-                                fontWeight: 600,
-                                color: "var(--slate)",
-                              }}
-                              onClick={() => toggle(`ss${ss.code}`)}
-                              onKeyDown={(e) => e.key === "Enter" && toggle(`ss${ss.code}`)}
-                              role="button"
-                              tabIndex={0}
-                            >
-                              <span>
-                                {ss.name}{" "}
-                                <span
-                                  style={{
-                                    fontFamily: "monospace",
-                                    fontSize: 11,
-                                    color: "var(--mist)",
-                                    marginRight: 6,
-                                  }}
-                                >
-                                  {ss.code}
-                                </span>
-                              </span>
-                              <IconChevronLeft size={11} className="coa-chevron" />
-                            </div>
-                            {isOpen(`ss${ss.code}`) && ss.accs ? (
-                              <div className="coa-accounts open">
-                                {ss.accs.map((acc) => (
-                                  <div className="coa-acc-row" key={acc.code}>
-                                    <span>{acc.name}</span>
-                                    <span className="coa-acc-code">{acc.code}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        ))
-                      : null}
-                    {sub.accs && isOpen(`s${sub.code}`) ? (
-                      <div className="coa-accounts open">
-                        {sub.accs.map((acc) => (
-                          <div className="coa-acc-row" key={acc.code}>
-                            <span>{acc.name}</span>
-                            <span className="coa-acc-code">{acc.code}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            ) : null}
+    <div className="coa-page">
+      <section className="page-hero coa-hero">
+        <div>
+          <span className="page-hero-kicker">الدليل المحاسبي</span>
+          <h2>شجرة الحسابات المعتمدة</h2>
+          <p>تصفح وابحث في حسابات الأصول والالتزامات والإيرادات والمصروفات</p>
+        </div>
+        <div className="coa-hero-stats">
+          <div className="coa-hero-stat">
+            <strong>{stats.groups}</strong>
+            <span>مجموعات رئيسية</span>
           </div>
-        ))}
+          <div className="coa-hero-stat">
+            <strong>{stats.totalAccounts}</strong>
+            <span>حساب فرعي</span>
+          </div>
+        </div>
+      </section>
+
+      <div className="coa-type-grid">
+        {allGroups.map((group) => {
+          const meta = GROUP_META[group.code];
+          const count = group.subs.reduce((sum, sub) => sum + countAccounts(sub), 0);
+          return (
+            <div key={group.code} className={`coa-type-card coa-type-${meta?.tone ?? "teal"}`}>
+              <span className="coa-type-code">{group.code}</span>
+              <strong>{group.name}</strong>
+              <small>{meta?.description}</small>
+              <span className="coa-type-count">{count} حساب</span>
+            </div>
+          );
+        })}
       </div>
-    </>
+
+      <div className="card coa-card">
+        <div className="coa-toolbar">
+          <div className="coa-search-wrap">
+            <IconSearch size={16} stroke={1.8} className="coa-search-icon" />
+            <input
+              className="coa-search-input"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ابحث بالرمز أو اسم الحساب..."
+            />
+          </div>
+          <div className="coa-toolbar-actions">
+            <button type="button" className="btn btn-ghost btn-sm" onClick={expandAll}>
+              <IconChevronsDown size={14} />
+              فتح الكل
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={collapseAll}>
+              <IconChevronsUp size={14} />
+              طي الكل
+            </button>
+          </div>
+        </div>
+
+        {filteredCoa.length === 0 ? (
+          <div className="tbl-empty">
+            <IconListTree size={36} stroke={1.2} style={{ opacity: 0.4 }} />
+            لا توجد حسابات مطابقة للبحث
+          </div>
+        ) : (
+          <div id="coa-tree" className="coa-tree">
+            {filteredCoa.map((group) => {
+              const meta = GROUP_META[group.code];
+              const tone = meta?.tone ?? "teal";
+              const groupId = `g${group.code}`;
+              const accountCount = group.subs.reduce(
+                (sum, sub) => sum + countAccounts(sub),
+                0,
+              );
+
+              return (
+                <div className={`coa-group coa-group-tone-${tone}`} key={group.code}>
+                  <div
+                    className={`coa-group-head${isOpen(groupId) ? " open" : ""}`}
+                    onClick={() => toggle(groupId)}
+                    onKeyDown={(e) => e.key === "Enter" && toggle(groupId)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="coa-head-left">
+                      <span className={`coa-code-badge coa-badge-${tone}`}>{group.code}</span>
+                      <div className="coa-group-text">
+                        <span className="coa-group-title">{group.name}</span>
+                        <span className="coa-group-meta">
+                          {meta?.typeLabel} · {accountCount} حساب
+                        </span>
+                      </div>
+                    </div>
+                    <IconChevronDown
+                      size={15}
+                      className={`coa-chevron down${isOpen(groupId) ? " open" : ""}`}
+                    />
+                  </div>
+
+                  {isOpen(groupId) ? (
+                    <div className="coa-group-body open">
+                      {group.subs.map((sub) => (
+                        <CoaSubSection
+                          key={sub.code}
+                          sub={sub}
+                          groupTone={tone}
+                          toggle={toggle}
+                          isOpen={isOpen}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

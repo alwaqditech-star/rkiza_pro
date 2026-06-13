@@ -11,6 +11,7 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import type { AssociationSettings } from "@/lib/types";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 const emptySettings = (): AssociationSettings => ({
   association_id: 0,
@@ -85,20 +86,22 @@ export function OrgSettingsClient() {
   }
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-title">
-          <IconBuildingCommunity size={18} stroke={1.8} />
-          بيانات الجمعية
-        </div>
-        <button type="button" className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
-          <IconCheck size={14} />
-          {saving ? "جاري الحفظ..." : "حفظ البيانات"}
-        </button>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="إعدادات الجمعية"
+        title="بيانات الجمعية"
+        description="تحديث الهوية المؤسسية وبيانات التواصل والإعدادات العامة"
+        actions={
+          <button type="button" className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+            <IconCheck size={14} />
+            {saving ? "جاري الحفظ..." : "حفظ البيانات"}
+          </button>
+        }
+      />
 
+      <div className="card">
       {message ? (
-        <div style={{ padding: "10px 16px", fontSize: 13, color: "var(--teal-dark)" }}>{message}</div>
+        <div className="page-alert success">{message}</div>
       ) : null}
 
       {loading ? (
@@ -292,6 +295,7 @@ export function OrgSettingsClient() {
           </div>
         </>
       )}
-    </div>
+      </div>
+    </AppPage>
   );
 }

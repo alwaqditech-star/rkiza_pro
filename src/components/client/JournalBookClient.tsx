@@ -6,6 +6,7 @@ import { IconChevronDown, IconInbox, IconNotebook } from "@tabler/icons-react";
 import { journalBookFilename } from "@/lib/export-filenames";
 import { fmtAmt, fmtDate } from "@/lib/format";
 import { ReportExportButtons } from "./ReportExportButtons";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface JournalLine {
   account_code: string;
@@ -52,34 +53,33 @@ export function JournalBookClient() {
   }, [loadItems]);
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-title">
-          <IconNotebook size={18} stroke={1.8} />
-          دفتر اليومية
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <ReportExportButtons
-            disabled={loading || items.length === 0}
-            buildExportUrl={(format) =>
-              `/api/client/journals/export-${format}?month=${encodeURIComponent(month)}`
-            }
-            buildFilename={(extension) => journalBookFilename(month, extension)}
-          />
-          <input
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          style={{
-            padding: "7px 12px",
-            border: "1.5px solid var(--silver)",
-            borderRadius: "var(--radius-sm)",
-            fontFamily: "var(--font)",
-            fontSize: 13,
-          }}
-        />
-        </div>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="المحاسبة"
+        title="دفتر اليومية"
+        description="استعراض القيود المحاسبية المسجلة شهرياً"
+        stat={{ value: items.length, label: "قيد" }}
+        actions={
+          <>
+            <ReportExportButtons
+              disabled={loading || items.length === 0}
+              buildExportUrl={(format) =>
+                `/api/client/journals/export-${format}?month=${encodeURIComponent(month)}`
+              }
+              buildFilename={(extension) => journalBookFilename(month, extension)}
+            />
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="coa-search-input"
+              style={{ width: "auto", minWidth: 150 }}
+            />
+          </>
+        }
+      />
+
+      <div className="card">
 
       {loading ? (
         <div className="tbl-empty">جاري التحميل...</div>
@@ -182,6 +182,7 @@ export function JournalBookClient() {
           );
         })
       )}
-    </div>
+      </div>
+    </AppPage>
   );
 }

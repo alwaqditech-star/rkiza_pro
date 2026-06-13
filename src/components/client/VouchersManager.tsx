@@ -20,6 +20,7 @@ import { arabicAmount, fmtAmt, fmtDate, isFutureDate, today } from "@/lib/format
 import { downloadExportFile } from "@/lib/client-download";
 import type { VoucherType } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface CoaOption {
   account_code: string;
@@ -267,18 +268,19 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
   }
 
   return (
-    <>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            {isReceipt ? (
-              <IconArrowDownCircle size={18} stroke={1.8} />
-            ) : (
-              <IconArrowUpCircle size={18} stroke={1.8} />
-            )}
-            {isReceipt ? "سندات القبض" : "سندات الصرف"}
-          </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <AppPage>
+      <PageHero
+        kicker={isReceipt ? "سندات القبض" : "سندات الصرف"}
+        title={isReceipt ? "سندات القبض" : "سندات الصرف"}
+        description={
+          isReceipt
+            ? "تسجيل ومتابعة سندات قبض التبرعات والإيرادات"
+            : "تسجيل ومتابعة سندات صرف المصروفات والالتزامات"
+        }
+        variant={isReceipt ? "emerald" : "gold"}
+        stat={{ value: items.length, label: "سند" }}
+        actions={
+          <>
             <button
               type="button"
               className={`btn btn-sm ${isReceipt ? "btn-success" : "btn-gold"}`}
@@ -299,7 +301,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
             </button>
             <button
               type="button"
-              className={`btn ${isReceipt ? "btn-success" : "btn-gold"}`}
+              className={`btn btn-sm ${isReceipt ? "btn-success" : "btn-gold"}`}
               onClick={() => setModalOpen(true)}
               disabled={!canWrite}
               style={!canWrite ? { display: "none" } : undefined}
@@ -307,8 +309,11 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
               <IconPlus size={16} stroke={1.8} />
               {isReceipt ? "سند قبض جديد" : "سند صرف جديد"}
             </button>
-          </div>
-        </div>
+          </>
+        }
+      />
+
+      <div className="card">
         <div className="tbl-wrap">
           <table>
             <thead>
@@ -660,6 +665,6 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
           </div>
         </div>
       </div>
-    </>
+    </AppPage>
   );
 }

@@ -14,6 +14,7 @@ import {
 import { apiFetch } from "@/lib/api-client";
 import { fmtAmt } from "@/lib/format";
 import { permissionDeniedMessage, type ClientAccessLevel } from "@/lib/client-permissions";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface VoucherSummary {
   voucher_number: string;
@@ -95,36 +96,23 @@ function ClientDashboardContent() {
   const netPositive = data.net >= 0;
 
   return (
-    <>
+    <AppPage>
       {accessDenied ? (
-        <div
-          className="card"
-          style={{
-            marginBottom: 16,
-            borderColor: "var(--ruby)",
-            background: "var(--ruby-pale)",
-          }}
-        >
-          <div style={{ fontWeight: 700, color: "var(--ruby)", marginBottom: 4 }}>
-            الوصول مرفوض
-          </div>
-          <div style={{ fontSize: 13, color: "var(--slate)" }}>
-            {permissionDeniedMessage(deniedLevel)}
-          </div>
+        <div className="page-alert error">
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>الوصول مرفوض</div>
+          <div style={{ fontSize: 13, fontWeight: 500 }}>{permissionDeniedMessage(deniedLevel)}</div>
         </div>
       ) : null}
 
-      <section className="page-hero">
-        <div>
-          <span className="page-hero-kicker">لوحة الجمعية</span>
-          <h2>نظرة عامة على الأداء المالي</h2>
-          <p>متابعة الإيرادات والمصروفات وسندات القبض والصرف</p>
-        </div>
-        <div className="page-hero-stat">
-          <strong>{fmtAmt(data.net)}</strong>
-          <span>صافي {netPositive ? "الفائض" : "العجز"} (ر.س)</span>
-        </div>
-      </section>
+      <PageHero
+        kicker="لوحة الجمعية"
+        title="نظرة عامة على الأداء المالي"
+        description="متابعة الإيرادات والمصروفات وسندات القبض والصرف"
+        stat={{
+          value: fmtAmt(data.net),
+          label: `صافي ${netPositive ? "الفائض" : "العجز"} (ر.س)`,
+        }}
+      />
 
       <div className="stats-grid">
         <div className="stat-card emerald">
@@ -281,6 +269,6 @@ function ClientDashboardContent() {
           </div>
         </div>
       </div>
-    </>
+    </AppPage>
   );
 }

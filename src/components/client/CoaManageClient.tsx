@@ -4,6 +4,7 @@ import { apiFetch, apiUrl } from "@/lib/api-client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconListTree, IconPlus, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import type { ChartOfAccount } from "@/lib/types";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 const GROUP_LABELS: Record<string, string> = {
   assets: "الأصول",
@@ -106,13 +107,13 @@ export function CoaManageClient() {
   }
 
   return (
-    <>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <IconListTree size={18} stroke={1.8} />
-            إدارة الدليل المحاسبي
-          </div>
+    <AppPage>
+      <PageHero
+        kicker="الدليل المحاسبي"
+        title="إدارة الدليل المحاسبي"
+        description="إضافة وتعديل وحذف حسابات الدليل المحاسبي للجمعية"
+        stat={{ value: accounts.length, label: "حساب" }}
+        actions={
           <button
             type="button"
             className="btn btn-primary btn-sm"
@@ -126,19 +127,12 @@ export function CoaManageClient() {
             <IconPlus size={14} />
             إضافة حساب
           </button>
-        </div>
+        }
+      />
 
+      <div className="card">
         {successMessage ? (
-          <div
-            style={{
-              padding: "10px 16px",
-              fontSize: 13,
-              color: "var(--emerald)",
-              borderBottom: "1px solid var(--fog)",
-            }}
-          >
-            {successMessage}
-          </div>
+          <div className="page-alert success">{successMessage}</div>
         ) : null}
 
         {loadError ? (
@@ -147,27 +141,18 @@ export function CoaManageClient() {
           </div>
         ) : null}
 
-        <div style={{ marginBottom: 12, display: "flex", gap: 8, alignItems: "center" }}>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="بحث في الحسابات..."
-            style={{
-              padding: "8px 12px",
-              border: "1.5px solid var(--silver)",
-              borderRadius: "var(--radius-sm)",
-              fontFamily: "var(--font)",
-              fontSize: 13,
-              flex: 1,
-            }}
-          />
-          <button type="button" className="btn btn-ghost btn-sm">
-            <IconSearch size={14} />
-          </button>
+        <div className="coa-toolbar">
+          <div className="coa-search-wrap">
+            <IconSearch size={16} stroke={1.8} className="coa-search-icon" />
+            <input
+              className="coa-search-input"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="بحث في الحسابات..."
+            />
+          </div>
           {!loading && accounts.length > 0 ? (
-            <span style={{ fontSize: 12, color: "var(--mist)", whiteSpace: "nowrap" }}>
-              {filtered.length} حساب
-            </span>
+            <span className="coa-count-chip">{filtered.length} حساب</span>
           ) : null}
         </div>
 
@@ -307,6 +292,6 @@ export function CoaManageClient() {
           </div>
         </div>
       </div>
-    </>
+    </AppPage>
   );
 }

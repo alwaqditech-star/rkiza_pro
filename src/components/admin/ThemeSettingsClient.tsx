@@ -9,6 +9,7 @@ import {
   type ThemeId,
 } from "@/lib/theme-presets";
 import { applyThemeById } from "@/lib/theme";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 export function ThemeSettingsClient() {
   const [selectedId, setSelectedId] = useState<ThemeId>(DEFAULT_THEME_ID);
@@ -68,48 +69,27 @@ export function ThemeSettingsClient() {
   }
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-title">
-          <IconPalette size={18} stroke={1.8} />
-          إعدادات ألوان النظام
-        </div>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          onClick={() => void handleReset()}
-          disabled={saving || loading}
-        >
-          <IconRefresh size={14} />
-          استعادة الافتراضي
-        </button>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="إعدادات النظام"
+        title="إعدادات ألوان النظام"
+        description="اختر نموذج الألوان المطبق على لوحة المدير ولوحة الجمعيات"
+        actions={
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => void handleReset()}
+            disabled={saving || loading}
+          >
+            <IconRefresh size={14} />
+            استعادة الافتراضي
+          </button>
+        }
+      />
 
-      {message ? (
-        <div
-          style={{
-            padding: "10px 16px",
-            fontSize: 13,
-            color: "var(--emerald)",
-            background: "var(--emerald-pale)",
-          }}
-        >
-          {message}
-        </div>
-      ) : null}
-
-      {error ? (
-        <div
-          style={{
-            padding: "10px 16px",
-            fontSize: 13,
-            color: "var(--ruby)",
-            background: "var(--ruby-pale)",
-          }}
-        >
-          {error}
-        </div>
-      ) : null}
+      <div className="card">
+      {message ? <div className="page-alert success">{message}</div> : null}
+      {error ? <div className="page-alert error">{error}</div> : null}
 
       <div className="settings-section">
         <div className="settings-section-title">اختر نموذج الألوان</div>
@@ -156,6 +136,7 @@ export function ThemeSettingsClient() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </AppPage>
   );
 }

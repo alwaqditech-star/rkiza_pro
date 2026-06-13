@@ -16,6 +16,7 @@ import {
   statementFilename,
 } from "@/lib/export-filenames";
 import { ReportExportButtons } from "./ReportExportButtons";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface AccountOption {
   account_code: string;
@@ -73,6 +74,12 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
     : isMonthly
       ? "دفتر الأستاذ العام الشهري"
       : "كشف حساب";
+  const kicker = isLedger || isMonthly ? "التقارير المالية" : "كشف الحساب";
+  const description = isLedger
+    ? "عرض حركة حساب محدد مع الرصيد الجاري"
+    : isMonthly
+      ? "ملخص حركة الحساب خلال شهر محدد"
+      : "كشف تفصيلي لحركة حساب خلال فترة";
   const Icon = isLedger ? IconBooks : isMonthly ? IconCalendarMonth : IconFileText;
 
   const [accounts, setAccounts] = useState<AccountOption[]>([]);
@@ -174,18 +181,21 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
   const canExport = Boolean(account && data && (data.movements.length > 0 || data.opening_balance !== 0));
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div className="card-title">
-          <Icon size={18} stroke={1.8} />
-          {title}
-        </div>
-        <ReportExportButtons
-          disabled={!canExport || loading}
-          buildExportUrl={buildExportUrl}
-          buildFilename={buildExportFilename}
-        />
-      </div>
+    <AppPage>
+      <PageHero
+        kicker={kicker}
+        title={title}
+        description={description}
+        actions={
+          <ReportExportButtons
+            disabled={!canExport || loading}
+            buildExportUrl={buildExportUrl}
+            buildFilename={buildExportFilename}
+          />
+        }
+      />
+
+      <div className="card">
 
       <div
         style={{
@@ -344,7 +354,8 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
           {renderMovementsTable(data, false)}
         </div>
       )}
-    </div>
+      </div>
+    </AppPage>
   );
 }
 

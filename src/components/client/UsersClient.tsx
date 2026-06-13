@@ -11,6 +11,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import type { AssociationUserRole, AssociationUserStatus, AssociationUserView } from "@/lib/types";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 const emptyForm = {
   display_name: "",
@@ -90,19 +91,21 @@ export function UsersClient() {
   }
 
   return (
-    <>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <IconUsers size={18} stroke={1.8} />
-            إدارة المستخدمين والصلاحيات
-          </div>
+    <AppPage>
+      <PageHero
+        kicker="الصلاحيات"
+        title="إدارة المستخدمين والصلاحيات"
+        description="إضافة مستخدمين فرعيين وتحديد أدوارهم في النظام"
+        stat={{ value: users.length, label: "مستخدم" }}
+        actions={
           <button type="button" className="btn btn-primary btn-sm" onClick={openAdd}>
             <IconPlus size={14} />
             إضافة مستخدم
           </button>
-        </div>
+        }
+      />
 
+      <div className="card">
         <div className="tbl-wrap">
           <table>
             <thead>
@@ -239,6 +242,6 @@ export function UsersClient() {
           </div>
         </div>
       </div>
-    </>
+    </AppPage>
   );
 }

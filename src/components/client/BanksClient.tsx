@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { fmtAmt } from "@/lib/format";
 import type { BankAccount, BankAccountStatus } from "@/lib/types";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 const BANKS = [
   "بنك الراجحي",
@@ -122,19 +123,21 @@ export function BanksClient() {
   const activeCount = useMemo(() => items.filter((item) => item.status === "active").length, [items]);
 
   return (
-    <>
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <IconBuildingBank size={18} stroke={1.8} />
-            إدارة الحسابات البنكية
-          </div>
+    <AppPage>
+      <PageHero
+        kicker="الحسابات البنكية"
+        title="إدارة الحسابات البنكية"
+        description="إضافة وتعديل حسابات الجمعية البنكية وربطها بالدليل المحاسبي"
+        stat={{ value: items.length, label: "حساب بنكي" }}
+        actions={
           <button type="button" className="btn btn-primary btn-sm" onClick={openAdd}>
             <IconPlus size={14} />
             إضافة حساب بنكي
           </button>
-        </div>
+        }
+      />
 
+      <div className="card">
         {loading ? (
           <div className="tbl-empty">جاري التحميل...</div>
         ) : items.length === 0 ? (
@@ -143,32 +146,21 @@ export function BanksClient() {
             لا توجد حسابات بنكية مضافة
           </div>
         ) : (
-          <div style={{ padding: 16, display: "grid", gap: 12 }}>
-            <div style={{ fontSize: 12, color: "var(--mist)" }}>
+          <div className="bank-list">
+            <div className="bank-list-meta">
               {activeCount} حساب نشط من أصل {items.length}
             </div>
             {items.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  border: "1px solid var(--silver)",
-                  borderRadius: "var(--radius-md)",
-                  padding: 14,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  flexWrap: "wrap",
-                }}
-              >
+              <div key={item.id} className="bank-item">
                 <div>
-                  <div style={{ fontWeight: 700, marginBottom: 4 }}>{item.description}</div>
-                  <div style={{ fontSize: 13, color: "var(--mist)" }}>{item.bank_name}</div>
-                  <div style={{ fontSize: 12, fontFamily: "monospace", marginTop: 6 }}>{item.iban}</div>
-                  <div style={{ fontSize: 12, marginTop: 4 }}>
+                  <div className="bank-item-title">{item.description}</div>
+                  <div className="bank-item-sub">{item.bank_name}</div>
+                  <div className="bank-item-iban">{item.iban}</div>
+                  <div className="bank-item-balance">
                     رصيد افتتاحي: {fmtAmt(item.opening_balance)} ر.س
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <div className="bank-item-actions">
                   <span className={`badge ${item.status === "active" ? "badge-emerald" : "badge-ruby"}`}>
                     {item.status === "active" ? "نشط" : "غير نشط"}
                   </span>
@@ -288,6 +280,6 @@ export function BanksClient() {
           </div>
         </div>
       </div>
-    </>
+    </AppPage>
   );
 }

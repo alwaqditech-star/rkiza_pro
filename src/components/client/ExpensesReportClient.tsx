@@ -15,6 +15,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { fmtAmt, fmtDate } from "@/lib/format";
+import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface VoucherRow {
   voucher_number: string;
@@ -171,20 +172,17 @@ export function ExpensesReportClient() {
       : "";
 
   return (
-    <>
-      <div
-        className="report-banner"
-        style={{
-          background: "linear-gradient(135deg,var(--ruby) 0%,#c0392b 60%,#e05575 100%)",
-        }}
-      >
-        <h2>
-          <IconReportMoney size={22} style={{ display: "inline", marginLeft: 8 }} />
-          تقرير المصروفات
-        </h2>
-        <p>ملخص شامل لجميع المصروفات المسجلة{periodLabel}</p>
-        <div className="report-date">تاريخ التقرير: {reportDateLabel()}</div>
-      </div>
+    <AppPage>
+      <PageHero
+        kicker="التقارير المالية"
+        title="تقرير المصروفات"
+        description={`ملخص شامل لجميع المصروفات المسجلة${periodLabel} · تاريخ التقرير: ${reportDateLabel()}`}
+        variant="ruby"
+        stats={[
+          { value: fmtAmt(totalExp), label: "إجمالي المصروفات (ر.س)" },
+          { value: filtered.length, label: "عدد السندات" },
+        ]}
+      />
 
       <PeriodFilter
         prefix="exp-rep"
@@ -330,6 +328,6 @@ export function ExpensesReportClient() {
           </div>
         </>
       )}
-    </>
+    </AppPage>
   );
 }
