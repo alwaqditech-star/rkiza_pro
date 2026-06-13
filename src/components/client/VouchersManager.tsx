@@ -16,7 +16,7 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
-import { arabicAmount, fmtAmt, fmtDate, today } from "@/lib/format";
+import { arabicAmount, fmtAmt, fmtDate, isFutureDate, today } from "@/lib/format";
 import type { VoucherType } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 
@@ -152,6 +152,10 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
     const amount = Number(form.amount);
     if (!form.beneficiary.trim() || !amount || !form.purpose.trim()) {
       setError("يرجى تعبئة الحقول المطلوبة");
+      return;
+    }
+    if (isFutureDate(form.date)) {
+      setError("لا يمكن اختيار تاريخ مستقبلي — اختر اليوم أو تاريخاً سابقاً");
       return;
     }
 
@@ -518,6 +522,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
                 <input
                   type="date"
                   value={form.date}
+                  max={today()}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
                 />
               </div>
