@@ -124,38 +124,6 @@ export function LoginScreen() {
             </div>
           ) : null}
         </form>
-
-        <div className="login-users-hint">
-          <strong>مهم:</strong> الحقل الأول = <strong>username</strong> من قاعدة البيانات،
-          وليس <strong>association_name</strong>.
-          <br />
-          API: <strong dir="ltr">rkiza-api.vercel.app</strong>
-          <br />
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            style={{ marginTop: 8, marginLeft: 6 }}
-            onClick={() => {
-              setUsername("admin");
-              setPassword("admin123");
-              setError("");
-            }}
-          >
-            تعبئة مدير النظام
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            style={{ marginTop: 8 }}
-            onClick={() => {
-              setUsername("rikaz_admin");
-              setPassword("demo123");
-              setError("");
-            }}
-          >
-            تعبئة الجمعية
-          </button>
-        </div>
       </div>
     </div>
   );
