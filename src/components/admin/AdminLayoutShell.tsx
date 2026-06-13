@@ -15,6 +15,7 @@ import { AdminNav } from "@/app/(dashboard)/admin/AdminNav";
 const PAGE_TITLES: Record<string, string> = {
   "/admin": "لوحة التحكم",
   "/admin/subscribers": "إدارة المشتركين",
+  "/admin/theme": "ألوان النظام",
   "/admin/profile": "الملف الشخصي",
 };
 

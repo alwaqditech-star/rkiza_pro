@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   IconLayoutDashboard,
+  IconPalette,
   IconUserCircle,
   IconUsers,
   type TablerIcon,
@@ -12,6 +13,7 @@ import {
 const navItems: { href: string; label: string; icon: TablerIcon }[] = [
   { href: "/admin", label: "لوحة التحكم", icon: IconLayoutDashboard },
   { href: "/admin/subscribers", label: "إدارة المشتركين", icon: IconUsers },
+  { href: "/admin/theme", label: "ألوان النظام", icon: IconPalette },
   { href: "/admin/profile", label: "الملف الشخصي", icon: IconUserCircle },
 ];
 

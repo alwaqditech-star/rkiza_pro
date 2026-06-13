@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const ibmArabic = IBM_Plex_Sans_Arabic({
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={`${ibmArabic.variable} h-full`}>
       <body className="min-h-full flex flex-col" style={{ fontFamily: "var(--font)" }}>
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
