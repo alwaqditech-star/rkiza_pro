@@ -17,6 +17,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { arabicAmount, fmtAmt, fmtDate, isFutureDate, today } from "@/lib/format";
+import { downloadExportFile } from "@/lib/client-download";
 import type { VoucherType } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 
@@ -220,21 +221,12 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
     setPrintingId(id);
     const prefix = isReceipt ? "sanad-qabd" : "sanad-sarf";
     try {
-      const res = await apiFetch(`/api/client/vouchers/${id}/export-pdf`);
-      if (!res.ok) {
-        const json = await res.json().catch(() => null);
-        alert(json?.message || json?.error || "فشل تصدير PDF");
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${prefix}-${voucherNumber.replace(/[^\w-]+/g, "_")}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      alert("خطأ في تصدير PDF");
+      await downloadExportFile(
+        `/api/client/vouchers/${id}/export-pdf`,
+        `${prefix}-${voucherNumber.replace(/[^\w-]+/g, "_")}.pdf`,
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "فشل تصدير PDF");
     } finally {
       setPrintingId(null);
     }
@@ -242,21 +234,6 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
 
   function getAccountLabel(code: string) {
     return accounts.find((acc) => acc.account_code === code)?.account_name ?? code;
-  }
-
-  async function downloadExportFile(url: string, filename: string) {
-    const res = await fetch(url);
-    if (!res.ok) {
-      const json = await res.json().catch(() => null);
-      throw new Error(json?.message || json?.error || "فشل التصدير");
-    }
-    const blob = await res.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = objectUrl;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(objectUrl);
   }
 
   async function handleExportExcel() {
