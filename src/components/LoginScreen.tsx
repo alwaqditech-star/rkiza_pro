@@ -1,7 +1,12 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { IconScale } from "@tabler/icons-react";
+import {
+  IconBuildingCommunity,
+  IconChartBar,
+  IconScale,
+  IconShieldCheck,
+} from "@tabler/icons-react";
 import { apiFetch } from "@/lib/api-client";
 import { syncSessionCookie } from "@/lib/session-bridge";
 
@@ -80,50 +85,80 @@ export function LoginScreen() {
 
   return (
     <div id="login-screen" className="show">
-      <div className="login-box">
-        <div className="login-logo">
-          <div className="login-logo-icon">
-            <IconScale size={28} stroke={1.8} />
-          </div>
-          <h1>ركاز</h1>
-          <p>نظام المحاسبة للقطاع غير الربحي</p>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="login-field">
-            <label htmlFor="username">اسم المستخدم</label>
-            <input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-              placeholder="مثال: admin أو rikaz_admin"
-              dir="ltr"
-              required
-            />
-          </div>
-          <div className="login-field">
-            <label htmlFor="password">كلمة المرور</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              placeholder="كلمة المرور الأصلية — وليس password_hash"
-              dir="ltr"
-              required
-            />
-          </div>
-          <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? "جاري الدخول..." : "تسجيل الدخول"}
-          </button>
-          {error ? (
-            <div className="login-error" style={{ display: "block" }}>
-              {error}
+      <div className="login-shell">
+        <aside className="login-brand-panel">
+          <h2>محاسبة ذكية للقطاع غير الربحي</h2>
+          <p>
+            منصة متكاملة لإدارة سندات القبض والصرف، القيود، التقارير، ومؤشرات
+            السلامة المالية — بتجربة عربية أصيلة.
+          </p>
+          <div className="login-brand-features">
+            <div className="login-brand-feature">
+              <span>
+                <IconChartBar size={15} stroke={1.8} />
+              </span>
+              تقارير مالية وتصدير PDF و Excel
             </div>
-          ) : null}
-        </form>
+            <div className="login-brand-feature">
+              <span>
+                <IconBuildingCommunity size={15} stroke={1.8} />
+              </span>
+              إدارة متعددة للجمعيات والمستخدمين
+            </div>
+            <div className="login-brand-feature">
+              <span>
+                <IconShieldCheck size={15} stroke={1.8} />
+              </span>
+              مؤشرات سلامة مالية وفق أفضل الممارسات
+            </div>
+          </div>
+        </aside>
+
+        <div className="login-box">
+          <div className="login-logo">
+            <div className="login-logo-icon">
+              <IconScale size={28} stroke={1.8} />
+            </div>
+            <h1>ركاز</h1>
+            <p>نظام المحاسبة للقطاع غير الربحي</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="login-field">
+              <label htmlFor="username">اسم المستخدم</label>
+              <input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                placeholder="مثال: admin أو alkhair"
+                dir="ltr"
+                required
+              />
+            </div>
+            <div className="login-field">
+              <label htmlFor="password">كلمة المرور</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                dir="ltr"
+                required
+              />
+            </div>
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? "جاري الدخول..." : "تسجيل الدخول"}
+            </button>
+            {error ? (
+              <div className="login-error" style={{ display: "block" }}>
+                {error}
+              </div>
+            ) : null}
+          </form>
+        </div>
       </div>
     </div>
   );

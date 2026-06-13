@@ -113,6 +113,19 @@ function ClientDashboardContent() {
           </div>
         </div>
       ) : null}
+
+      <section className="page-hero">
+        <div>
+          <span className="page-hero-kicker">لوحة الجمعية</span>
+          <h2>نظرة عامة على الأداء المالي</h2>
+          <p>متابعة الإيرادات والمصروفات وسندات القبض والصرف</p>
+        </div>
+        <div className="page-hero-stat">
+          <strong>{fmtAmt(data.net)}</strong>
+          <span>صافي {netPositive ? "الفائض" : "العجز"} (ر.س)</span>
+        </div>
+      </section>
+
       <div className="stats-grid">
         <div className="stat-card emerald">
           <div className="stat-icon">
@@ -247,84 +260,24 @@ function ClientDashboardContent() {
             ملخص الحركة المالية
           </div>
         </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: 14,
-          }}
-        >
-          <div
-            style={{
-              textAlign: "center",
-              padding: 16,
-              background: "var(--emerald-pale)",
-              borderRadius: "var(--radius-md)",
-            }}
-          >
-            <div style={{ fontSize: 11, color: "var(--mist)", fontWeight: 700, marginBottom: 6 }}>
-              إجمالي الإيرادات
-            </div>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 700,
-                color: "var(--emerald)",
-                direction: "ltr",
-              }}
-            >
-              {fmtAmt(data.total_donations)}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--mist)", marginTop: 2 }}>ريال سعودي</div>
+        <div className="summary-tiles">
+          <div className="summary-tile emerald">
+            <div className="summary-tile-label">إجمالي الإيرادات</div>
+            <div className="summary-tile-value">{fmtAmt(data.total_donations)}</div>
+            <div className="summary-tile-note">ريال سعودي</div>
           </div>
-          <div
-            style={{
-              textAlign: "center",
-              padding: 16,
-              background: "var(--ruby-pale)",
-              borderRadius: "var(--radius-md)",
-            }}
-          >
-            <div style={{ fontSize: 11, color: "var(--mist)", fontWeight: 700, marginBottom: 6 }}>
-              إجمالي المصروفات
-            </div>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 700,
-                color: "var(--ruby)",
-                direction: "ltr",
-              }}
-            >
-              {fmtAmt(data.total_expenses)}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--mist)", marginTop: 2 }}>ريال سعودي</div>
+          <div className="summary-tile ruby">
+            <div className="summary-tile-label">إجمالي المصروفات</div>
+            <div className="summary-tile-value">{fmtAmt(data.total_expenses)}</div>
+            <div className="summary-tile-note">ريال سعودي</div>
           </div>
-          <div
-            style={{
-              textAlign: "center",
-              padding: 16,
-              background: netPositive ? "var(--teal-pale)" : "var(--ruby-pale)",
-              borderRadius: "var(--radius-md)",
-            }}
-          >
-            <div style={{ fontSize: 11, color: "var(--mist)", fontWeight: 700, marginBottom: 6 }}>
-              صافي الفائض / العجز
-            </div>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 700,
-                color: netPositive ? "var(--teal-dark)" : "var(--ruby)",
-                direction: "ltr",
-              }}
-            >
+          <div className={`summary-tile ${netPositive ? "teal" : "ruby"}`}>
+            <div className="summary-tile-label">صافي الفائض / العجز</div>
+            <div className="summary-tile-value">
               {netPositive ? "+" : ""}
               {fmtAmt(data.net)}
             </div>
-            <div style={{ fontSize: 11, color: "var(--mist)", marginTop: 2 }}>
-              {netPositive ? "فائض" : "عجز"}
-            </div>
+            <div className="summary-tile-note">{netPositive ? "فائض" : "عجز"}</div>
           </div>
         </div>
       </div>

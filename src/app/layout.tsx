@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
+import "./design-enhancements.css";
 
 const ibmArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic"],
