@@ -1,5 +1,5 @@
 "use client";
-import { apiFetch, apiUrl } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
 
 import { useEffect, useState } from "react";
 import {
@@ -116,7 +116,7 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
       const endpoint = variant === "statement" || variant === "monthly"
         ? "/api/client/statement"
         : "/api/client/ledger";
-      const res = await fetch(`${endpoint}?${params.toString()}`);
+      const res = await apiFetch(`${endpoint}?${params.toString()}`);
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل تحميل البيانات");
