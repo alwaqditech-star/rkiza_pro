@@ -125,26 +125,26 @@ export function LoginScreen() {
 
           <form onSubmit={handleSubmit}>
             <div className="login-field">
-              <label htmlFor="username">اسم المستخدم</label>
               <input
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
-                placeholder="مثال: admin أو alkhair"
+                aria-label="اسم المستخدم"
+                placeholder="اسم المستخدم"
                 dir="ltr"
                 required
               />
             </div>
             <div className="login-field">
-              <label htmlFor="password">كلمة المرور</label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                placeholder="••••••••"
+                aria-label="كلمة المرور"
+                placeholder="كلمة المرور"
                 dir="ltr"
                 required
               />
