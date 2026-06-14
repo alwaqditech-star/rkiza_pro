@@ -4,9 +4,10 @@ import { apiFetch, apiUrl } from "@/lib/api-client";
 import { useCallback, useEffect, useState } from "react";
 import { IconChevronDown, IconInbox, IconNotebook } from "@tabler/icons-react";
 import { journalBookFilename } from "@/lib/export-filenames";
-import { fmtAmt, fmtDate } from "@/lib/format";
+import { currentMonth, fmtAmt, fmtDate } from "@/lib/format";
 import { ReportExportButtons } from "./ReportExportButtons";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { MonthInput } from "@/components/ui/DateInputs";
 
 interface JournalLine {
   account_code: string;
@@ -26,13 +27,8 @@ interface JournalItem {
   lines: JournalLine[];
 }
 
-function currentMonthValue() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
 export function JournalBookClient() {
-  const [month, setMonth] = useState(currentMonthValue());
+  const [month, setMonth] = useState(currentMonth());
   const [items, setItems] = useState<JournalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -68,8 +64,7 @@ export function JournalBookClient() {
               }
               buildFilename={(extension) => journalBookFilename(month, extension)}
             />
-            <input
-              type="month"
+            <MonthInput
               value={month}
               onChange={(e) => setMonth(e.target.value)}
               className="coa-search-input"

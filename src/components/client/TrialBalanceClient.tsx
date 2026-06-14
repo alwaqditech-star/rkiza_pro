@@ -7,6 +7,7 @@ import { trialBalanceFilename } from "@/lib/export-filenames";
 import { fmtAmt } from "@/lib/format";
 import { ReportExportButtons } from "./ReportExportButtons";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { DateInput } from "@/components/ui/DateInputs";
 
 interface TrialRow {
   account_code: string;
@@ -81,8 +82,7 @@ export function TrialBalanceClient() {
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--slate)", whiteSpace: "nowrap" }}>
             الفترة من:
           </span>
-          <input
-            type="date"
+          <DateInput
             value={from}
             onChange={(e) => setFrom(e.target.value)}
             style={{
@@ -98,8 +98,7 @@ export function TrialBalanceClient() {
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--slate)", whiteSpace: "nowrap" }}>
             إلى:
           </span>
-          <input
-            type="date"
+          <DateInput
             value={to}
             onChange={(e) => setTo(e.target.value)}
             style={{

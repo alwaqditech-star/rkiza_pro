@@ -21,6 +21,7 @@ import { downloadExportFile } from "@/lib/client-download";
 import type { VoucherType } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { DateInput } from "@/components/ui/DateInputs";
 
 interface CoaOption {
   account_code: string;
@@ -501,10 +502,8 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
             <div className="form-grid">
               <div className="form-group">
                 <label>التاريخ *</label>
-                <input
-                  type="date"
+                <DateInput
                   value={form.date}
-                  max={today()}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
                 />
               </div>

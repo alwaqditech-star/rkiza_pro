@@ -10,13 +10,14 @@ import {
   IconSearch,
   IconX,
 } from "@tabler/icons-react";
-import { fmtAmt, fmtDate } from "@/lib/format";
+import { currentMonth, fmtAmt, fmtDate } from "@/lib/format";
 import {
   ledgerFilename,
   statementFilename,
 } from "@/lib/export-filenames";
 import { ReportExportButtons } from "./ReportExportButtons";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { DateInput, MonthInput } from "@/components/ui/DateInputs";
 
 interface AccountOption {
   account_code: string;
@@ -57,11 +58,6 @@ function monthRange(month: string) {
   return { from, to };
 }
 
-function currentMonthValue() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
-
 function balanceLabel(value: number) {
   return `${fmtAmt(Math.abs(value))} ${value >= 0 ? "مدين" : "دائن"}`;
 }
@@ -86,7 +82,7 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
   const [account, setAccount] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [month, setMonth] = useState(currentMonthValue());
+  const [month, setMonth] = useState(currentMonth());
   const [data, setData] = useState<LedgerData | null>(null);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -143,7 +139,7 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
     setAccount("");
     setFrom("");
     setTo("");
-    setMonth(currentMonthValue());
+    setMonth(currentMonth());
     setData(null);
     setSearched(false);
     setError("");
@@ -234,8 +230,7 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
         {isMonthly ? (
           <div className="form-group">
             <label>الشهر</label>
-            <input
-              type="month"
+            <MonthInput
               value={month}
               onChange={(e) => setMonth(e.target.value)}
               style={{
@@ -251,8 +246,7 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
           <>
             <div className="form-group">
               <label>{isLedger ? "الفترة من" : "من تاريخ"}</label>
-              <input
-                type="date"
+              <DateInput
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
                 style={{
@@ -266,8 +260,7 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
             </div>
             <div className="form-group">
               <label>{isLedger ? "إلى" : "إلى تاريخ"}</label>
-              <input
-                type="date"
+              <DateInput
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 style={{

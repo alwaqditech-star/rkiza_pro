@@ -9,9 +9,10 @@ import {
   IconRefresh,
   IconTrash,
 } from "@tabler/icons-react";
-import { fmtAmt, today } from "@/lib/format";
+import { fmtAmt, isFutureDate, today } from "@/lib/format";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { DateInput } from "@/components/ui/DateInputs";
 
 interface CoaOption {
   account_code: string;
@@ -120,6 +121,10 @@ export function JournalEntryClient() {
       setError("القيد غير متوازن — المدين ≠ الدائن");
       return;
     }
+    if (isFutureDate(journalDate)) {
+      setError("لا يمكن اختيار تاريخ مستقبلي");
+      return;
+    }
 
     setSaving(true);
     try {
@@ -190,8 +195,7 @@ export function JournalEntryClient() {
         </div>
         <div className="form-group">
           <label>التاريخ</label>
-          <input
-            type="date"
+          <DateInput
             value={journalDate}
             onChange={(e) => setJournalDate(e.target.value)}
           />

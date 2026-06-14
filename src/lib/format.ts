@@ -3,7 +3,14 @@ export function today(): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** YYYY-MM — أقصى شهر مسموح (الشهر الحالي) */
+export function currentMonth(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export function isFutureDate(dateStr: string): boolean {
+  if (!dateStr.trim()) return false;
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr.trim());
   if (!match) return true;
 
@@ -15,6 +22,37 @@ export function isFutureDate(dateStr: string): boolean {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return value > todayStart;
+}
+
+export function isFutureMonth(monthStr: string): boolean {
+  if (!monthStr.trim()) return false;
+  const match = /^(\d{4})-(\d{2})$/.exec(monthStr.trim());
+  if (!match) return true;
+  const value = Number(match[1]) * 12 + Number(match[2]);
+  const now = new Date();
+  const current = now.getFullYear() * 12 + (now.getMonth() + 1);
+  return value > current;
+}
+
+/** يمنع التواريخ المستقبلية — يُستخدم في حقول type="date" */
+export function capDateToToday(dateStr: string): string {
+  if (!dateStr.trim()) return dateStr;
+  return isFutureDate(dateStr) ? today() : dateStr;
+}
+
+/** يمنع الأشهر المستقبلية — يُستخدم في حقول type="month" */
+export function capMonthToCurrent(monthStr: string): string {
+  if (!monthStr.trim()) return monthStr;
+  return isFutureMonth(monthStr) ? currentMonth() : monthStr;
+}
+
+/** شهر/سنة (مثل مسير الرواتب) — YYYY-MM مقارنة */
+export function isFutureYearMonth(month: string | number, year: string | number): boolean {
+  const y = Number(year);
+  const m = Number(month);
+  if (!y || !m || m < 1 || m > 12) return false;
+  const now = new Date();
+  return y * 12 + m > now.getFullYear() * 12 + (now.getMonth() + 1);
 }
 
 export function fmtDate(d: string | Date | null | undefined): string {

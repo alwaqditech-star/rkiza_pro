@@ -11,7 +11,9 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import type { AssociationSettings } from "@/lib/types";
+import { isFutureDate } from "@/lib/format";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { DateInput } from "@/components/ui/DateInputs";
 
 const emptySettings = (): AssociationSettings => ({
   association_id: 0,
@@ -62,6 +64,10 @@ export function OrgSettingsClient() {
   }
 
   async function handleSave() {
+    if (form.founded_date && isFutureDate(form.founded_date)) {
+      setMessage("لا يمكن اختيار تاريخ تأسيس مستقبلي");
+      return;
+    }
     setSaving(true);
     setMessage("");
     try {
@@ -144,8 +150,7 @@ export function OrgSettingsClient() {
               </div>
               <div className="form-group">
                 <label>تاريخ التأسيس</label>
-                <input
-                  type="date"
+                <DateInput
                   value={form.founded_date ?? ""}
                   onChange={(e) => updateField("founded_date", e.target.value || null)}
                 />

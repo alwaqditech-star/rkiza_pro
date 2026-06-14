@@ -9,7 +9,7 @@ import {
   IconRefresh,
   IconUsersGroup,
 } from "@tabler/icons-react";
-import { fmtAmt } from "@/lib/format";
+import { fmtAmt, isFutureYearMonth } from "@/lib/format";
 import { payrollFilename } from "@/lib/export-filenames";
 import type { Employee, PayrollPreview } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
@@ -42,6 +42,11 @@ export function PayrollClient() {
   const [message, setMessage] = useState("");
 
   const loadPreview = useCallback(async () => {
+    if (isFutureYearMonth(month, year)) {
+      setMessage("لا يمكن اختيار شهر أو سنة مستقبلية");
+      setPreview(null);
+      return;
+    }
     setLoading(true);
     setMessage("");
     try {
@@ -97,7 +102,13 @@ export function PayrollClient() {
             <select
               value={month}
               onChange={(e) => {
-                setMonth(e.target.value);
+                const nextMonth = e.target.value;
+                if (isFutureYearMonth(nextMonth, year)) {
+                  setMessage("لا يمكن اختيار شهر مستقبلي");
+                  return;
+                }
+                setMessage("");
+                setMonth(nextMonth);
                 setGenerated(false);
               }}
               className="coa-search-input"
@@ -112,8 +123,12 @@ export function PayrollClient() {
             <input
               type="number"
               value={year}
+              max={new Date().getFullYear()}
               onChange={(e) => {
-                setYear(e.target.value);
+                const maxYear = new Date().getFullYear();
+                let nextYear = e.target.value;
+                if (Number(nextYear) > maxYear) nextYear = String(maxYear);
+                setYear(nextYear);
                 setGenerated(false);
               }}
               placeholder="السنة"

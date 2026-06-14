@@ -12,12 +12,13 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { calcEmployeeTotals } from "@/lib/employee-utils";
-import { fmtAmt, fmtDate, today } from "@/lib/format";
+import { fmtAmt, fmtDate, isFutureDate, today } from "@/lib/format";
 import { employeesFilename } from "@/lib/export-filenames";
 import type { Employee, EmployeeStatus } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { ReportExportButtons } from "./ReportExportButtons";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { DateInput } from "@/components/ui/DateInputs";
 
 const emptyForm = {
   name: "",
@@ -96,6 +97,10 @@ export function EmployeesClient() {
   }
 
   async function handleSave() {
+    if (isFutureDate(form.hire_date)) {
+      setMessage("لا يمكن اختيار تاريخ تعيين مستقبلي");
+      return;
+    }
     const payload = {
       name: form.name.trim(),
       job_title: form.job_title.trim(),
@@ -288,8 +293,7 @@ export function EmployeesClient() {
               </div>
               <div className="form-group">
                 <label>تاريخ التعيين</label>
-                <input
-                  type="date"
+                <DateInput
                   value={form.hire_date}
                   onChange={(e) => setForm({ ...form, hire_date: e.target.value })}
                 />

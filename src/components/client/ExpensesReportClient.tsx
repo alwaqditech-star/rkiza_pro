@@ -16,6 +16,7 @@ import {
 } from "@tabler/icons-react";
 import { fmtAmt, fmtDate } from "@/lib/format";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { DateInput } from "@/components/ui/DateInputs";
 
 interface VoucherRow {
   voucher_number: string;
@@ -66,9 +67,8 @@ function PeriodFilter({
       <span style={{ fontSize: 12, fontWeight: 700, color: "var(--mist)" }}>فترة التقرير</span>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <span style={{ fontSize: 12, color: "var(--mist)" }}>من</span>
-        <input
+        <DateInput
           id={`${prefix}-from`}
-          type="date"
           value={from}
           onChange={(e) => onFromChange(e.target.value)}
           style={{
@@ -83,9 +83,8 @@ function PeriodFilter({
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <span style={{ fontSize: 12, color: "var(--mist)" }}>إلى</span>
-        <input
+        <DateInput
           id={`${prefix}-to`}
-          type="date"
           value={to}
           onChange={(e) => onToChange(e.target.value)}
           style={{
