@@ -61,7 +61,11 @@ export async function apiFetch(
     invalidateCacheForMutation(path);
   }
 
-  if (response.status === 401 && typeof window !== 'undefined') {
+  if (
+    response.status === 401 &&
+    typeof window !== 'undefined' &&
+    !normalizeApiPath(path).startsWith('/api/auth/')
+  ) {
     const { clearSessionCookie } = await import('@/lib/session-bridge');
     await clearSessionCookie().catch(() => undefined);
     window.location.assign('/');

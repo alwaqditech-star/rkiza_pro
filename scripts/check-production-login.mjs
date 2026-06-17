@@ -29,14 +29,20 @@ async function main() {
   console.log('3) حفظ الجلسة على rkiza-pro (/api/session)...');
   const sessionRes = await fetch(`${PRO}/api/session`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: PRO,
+      Referer: `${PRO}/`,
+    },
     body: JSON.stringify({ token: login.token }),
   });
   const session = await sessionRes.json().catch(() => ({}));
   if (!sessionRes.ok) {
-    console.log('   ✗ فشل session:', session.message);
-    console.log('\n→ الحل: في Vercel → rkiza-pro → Settings → Environment Variables');
-    console.log('   أضف JWT_SECRET بنفس قيمة rkiza-api ثم Redeploy');
+    console.log('   ✗ فشل session:', session.message, `(HTTP ${sessionRes.status})`);
+    if (sessionRes.status === 401) {
+      console.log('\n→ الحل: في Vercel → rkiza-pro → Settings → Environment Variables');
+      console.log('   أضف JWT_SECRET بنفس قيمة rkiza-api ثم Redeploy');
+    }
     process.exit(1);
   }
   console.log('   ✓ session OK — rkiza-pro جاهز لتسجيل الدخول');

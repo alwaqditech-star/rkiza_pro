@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
-import { AUTH_COOKIE_NAME } from '@/lib/auth-constants';
-import { getJwtSecret, isJwtSecretConfigured } from "@/lib/jwt-secret";
-import type { AuthSession } from "@/lib/types";
+import { AUTH_COOKIE_NAME } from "@/lib/auth-constants";
+import { verifySessionToken } from "@/lib/session-verify";
 import {
   canAccessClientPath,
   getPathAccessLevel,
-  permissionDeniedMessage,
 } from "@/lib/client-permissions";
 
 function applySecurityHeaders(response: NextResponse): NextResponse {
@@ -35,23 +32,6 @@ function redirectToLogin(request: NextRequest, clearSession = false): NextRespon
   return applySecurityHeaders(response);
 }
 
-async function verifyRequestToken(
-  token: string,
-): Promise<AuthSession | null> {
-  const secret = getJwtSecret();
-  if (!secret) return null;
-
-  try {
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(secret),
-    );
-    return payload as unknown as AuthSession;
-  } catch {
-    return null;
-  }
-}
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAdminRoute = pathname.startsWith("/admin");
@@ -61,16 +41,12 @@ export async function middleware(request: NextRequest) {
     return applySecurityHeaders(NextResponse.next());
   }
 
-  if (process.env.NODE_ENV === "production" && !isJwtSecretConfigured()) {
-    return applySecurityHeaders(redirectToLogin(request, true));
-  }
-
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   if (!token) {
     return redirectToLogin(request);
   }
 
-  const session = await verifyRequestToken(token);
+  const session = await verifySessionToken(token);
   if (!session) {
     return redirectToLogin(request, true);
   }

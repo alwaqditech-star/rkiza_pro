@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import { AUTH_COOKIE_NAME, verifyToken } from '@/lib/auth';
-import { getUpstreamApiBase, isSameOriginRequest } from '@/lib/api-proxy';
-import { isJwtSecretConfigured } from '@/lib/jwt-secret';
+import { AUTH_COOKIE_NAME } from '@/lib/auth';
+import {
+  isSameOriginRequest,
+  verifySessionToken,
+} from '@/lib/session-verify';
 
 const cookieOptions = {
   httpOnly: true,
@@ -10,31 +12,6 @@ const cookieOptions = {
   path: '/',
   maxAge: 60 * 60 * 24 * 7,
 };
-
-async function verifyTokenViaApi(token: string): Promise<boolean> {
-  try {
-    const res = await fetch(`${getUpstreamApiBase()}/api/auth/verify`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-async function isTokenValid(token: string): Promise<boolean> {
-  if (!isJwtSecretConfigured()) {
-    return verifyTokenViaApi(token);
-  }
-
-  try {
-    verifyToken(token);
-    return true;
-  } catch {
-    return verifyTokenViaApi(token);
-  }
-}
 
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
@@ -53,9 +30,14 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!(await isTokenValid(token))) {
+  const session = await verifySessionToken(token);
+  if (!session) {
     return NextResponse.json(
-      { success: false, message: 'فشل التحقق من الجلسة — راجع JWT_SECRET على Vercel' },
+      {
+        success: false,
+        message:
+          'فشل التحقق من الجلسة — تأكد من تطابق JWT_SECRET بين الواجهة و rkiza-api على Vercel',
+      },
       { status: 401 },
     );
   }
