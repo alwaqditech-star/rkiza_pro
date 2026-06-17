@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import type { AdminSession, AuthSession, ClientSession } from '@/lib/types';
 import { AUTH_COOKIE_NAME } from '@/lib/auth-constants';
 import { getJwtSecret } from '@/lib/jwt-secret';
+import { verifySessionToken } from '@/lib/session-verify';
 import {
   getClientPermissions,
   type ClientPermissions,
@@ -42,11 +43,7 @@ export async function getSessionFromCookie(): Promise<AuthSession | null> {
   const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   if (!token) return null;
 
-  try {
-    return verifyToken(token);
-  } catch {
-    return null;
-  }
+  return verifySessionToken(token);
 }
 
 export async function requireAdminSession(): Promise<AdminSession> {

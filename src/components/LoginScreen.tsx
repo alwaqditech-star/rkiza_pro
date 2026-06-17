@@ -37,13 +37,17 @@ export function LoginScreen() {
         token?: string;
         data?: { role?: string; is_first_login?: boolean };
       };
+      const rawBody = await res.text();
       try {
-        json = await res.json();
+        json = JSON.parse(rawBody) as typeof json;
       } catch {
+        const deploymentMissing = rawBody.includes('DEPLOYMENT_NOT_FOUND');
         setError(
-          res.status === 404
-            ? "خادم API غير متاح — تحقق من نشر rkiza-api على Vercel"
-            : `خطأ في الاتصال بالخادم (${res.status})`,
+          deploymentMissing
+            ? 'الموقع غير منشور على Vercel — أعد ربط المشروع ونشر rkiza-pro من لوحة Vercel'
+            : res.status === 404
+              ? 'خادم الواجهة أو API غير متاح — تحقق من النشر على Vercel'
+              : `خطأ في الاتصال بالخادم (${res.status})`,
         );
         return;
       }
