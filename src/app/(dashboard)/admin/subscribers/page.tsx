@@ -12,6 +12,8 @@ import {
   IconUserPlus,
 } from "@tabler/icons-react";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface Association {
   id: number;
@@ -35,6 +37,7 @@ function formatDate(value: string) {
 }
 
 export default function SubscribersPage() {
+  const toast = useToast();
   const [associations, setAssociations] = useState<Association[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -90,6 +93,7 @@ export default function SubscribersPage() {
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل إنشاء الجمعية");
+        toast.error(json.message || "فشل إنشاء الجمعية");
         return;
       }
       setCredentials({
@@ -98,7 +102,7 @@ export default function SubscribersPage() {
         password: json.data.password,
       });
       setAssociationName("");
-      setSuccess("تم إنشاء حساب الجمعية بنجاح");
+      toast.success("تم إنشاء حساب الجمعية بنجاح");
       await loadData();
     } catch {
       setError("خطأ في الاتصال بالخادم");
@@ -118,9 +122,10 @@ export default function SubscribersPage() {
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل تجديد الاشتراك");
+        toast.error(json.message || "فشل تجديد الاشتراك");
         return;
       }
-      setSuccess(json.message);
+      toast.success(json.message || "تم تجديد الاشتراك بنجاح");
       await loadData();
     } catch {
       setError("خطأ في الاتصال بالخادم");
@@ -184,9 +189,10 @@ export default function SubscribersPage() {
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل تحديث البيانات");
+        toast.error(json.message || "فشل تحديث البيانات");
         return;
       }
-      setSuccess(json.message || "تم تحديث بيانات الجمعية بنجاح");
+      toast.success(json.message || "تم تحديث بيانات الجمعية بنجاح");
       closeEditModal();
       await loadData();
     } catch {
@@ -208,9 +214,10 @@ export default function SubscribersPage() {
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل حذف الجمعية");
+        toast.error(json.message || "فشل حذف الجمعية");
         return;
       }
-      setSuccess(json.message);
+      toast.success(json.message || "تم حذف الجمعية بنجاح");
       await loadData();
     } catch {
       setError("خطأ في الاتصال بالخادم");
@@ -235,7 +242,7 @@ export default function SubscribersPage() {
       a.download = `kashf-almushtarikin-${new Date().toISOString().slice(0, 10)}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-      setSuccess("تم تصدير كشف المشتركين PDF بنجاح");
+      toast.success("تم تصدير كشف المشتركين PDF بنجاح");
     } catch {
       setError("خطأ في تصدير PDF");
     } finally {
@@ -258,7 +265,7 @@ export default function SubscribersPage() {
       a.download = "rikaz-admin-reports.xlsx";
       a.click();
       URL.revokeObjectURL(url);
-      setSuccess("تم تصدير التقرير بنجاح");
+      toast.success("تم تصدير التقرير بنجاح");
     } catch {
       setError("خطأ في تصدير التقرير");
     }

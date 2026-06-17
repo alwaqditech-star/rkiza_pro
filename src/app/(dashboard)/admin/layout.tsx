@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { AdminLayoutShell } from "@/components/admin/AdminLayoutShell";
-import { SessionHydrator } from "@/components/SessionHydrator";
-import { getSessionFromCookie, AUTH_COOKIE_NAME } from "@/lib/auth";
+import { getSessionFromCookie } from "@/lib/auth";
 
 export default async function AdminLayout({
   children,
@@ -14,13 +12,5 @@ export default async function AdminLayout({
     redirect("/");
   }
 
-  const cookieStore = await cookies();
-  const apiToken = cookieStore.get(AUTH_COOKIE_NAME)?.value;
-
-  return (
-    <>
-      <SessionHydrator initialToken={apiToken} />
-      <AdminLayoutShell session={session}>{children}</AdminLayoutShell>
-    </>
-  );
+  return <AdminLayoutShell session={session}>{children}</AdminLayoutShell>;
 }

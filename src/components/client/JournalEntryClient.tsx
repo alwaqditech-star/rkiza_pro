@@ -10,6 +10,8 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { fmtAmt, isFutureDate, today } from "@/lib/format";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 import { DateInput } from "@/components/ui/DateInputs";
@@ -28,6 +30,7 @@ interface JournalLineForm {
 const ENTRY_TYPES = ["قيد عادي", "قيد ترحيل", "قيد تسوية", "قيد إقفال"];
 
 export function JournalEntryClient() {
+  const toast = useToast();
   const { canWrite } = useClientPermissions();
   const [accounts, setAccounts] = useState<CoaOption[]>([]);
   const [journalNumber, setJournalNumber] = useState("");
@@ -148,12 +151,14 @@ export function JournalEntryClient() {
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل حفظ القيد");
+        toast.error(json.message || "فشل حفظ القيد");
         return;
       }
-      setSuccess(json.message || "تم حفظ القيد بنجاح");
+      toast.success(json.message || "تم حفظ القيد بنجاح");
       resetForm();
     } catch {
       setError("خطأ في الاتصال بالخادم");
+      toast.error("خطأ في الاتصال بالخادم");
     } finally {
       setSaving(false);
     }

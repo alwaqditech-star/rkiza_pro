@@ -12,6 +12,8 @@ import {
 import { fmtAmt, isFutureYearMonth } from "@/lib/format";
 import { payrollFilename } from "@/lib/export-filenames";
 import type { Employee, PayrollPreview } from "@/lib/types";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { ReportExportButtons } from "./ReportExportButtons";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
@@ -32,6 +34,7 @@ const MONTHS = [
 ];
 
 export function PayrollClient() {
+  const toast = useToast();
   const { canWrite } = useClientPermissions();
   const now = new Date();
   const [month, setMonth] = useState(String(now.getMonth() + 1).padStart(2, "0"));
@@ -39,16 +42,14 @@ export function PayrollClient() {
   const [preview, setPreview] = useState<PayrollPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
-  const [message, setMessage] = useState("");
 
   const loadPreview = useCallback(async () => {
     if (isFutureYearMonth(month, year)) {
-      setMessage("لا يمكن اختيار شهر أو سنة مستقبلية");
+      toast.warning("لا يمكن اختيار شهر أو سنة مستقبلية");
       setPreview(null);
       return;
     }
     setLoading(true);
-    setMessage("");
     try {
       const res = await apiFetch(`/api/client/payroll?month=${month}&year=${year}`);
       const json = await res.json();
@@ -77,8 +78,9 @@ export function PayrollClient() {
       body: JSON.stringify({ month, year: Number(year) }),
     });
     const json = await res.json();
-    setMessage(json.message ?? (json.success ? "تم الترحيل" : "فشل الترحيل"));
-    if (json.success) loadPreview();
+    if (notifyApiResult(toast, json, { success: "تم ترحيل مسير الرواتب بنجاح", error: "فشل الترحيل" })) {
+      loadPreview();
+    }
   }
 
   const employees: Employee[] = preview?.employees ?? [];
@@ -104,10 +106,9 @@ export function PayrollClient() {
               onChange={(e) => {
                 const nextMonth = e.target.value;
                 if (isFutureYearMonth(nextMonth, year)) {
-                  setMessage("لا يمكن اختيار شهر مستقبلي");
+                  toast.warning("لا يمكن اختيار شهر مستقبلي");
                   return;
                 }
-                setMessage("");
                 setMonth(nextMonth);
                 setGenerated(false);
               }}
@@ -146,10 +147,6 @@ export function PayrollClient() {
       />
 
       <div className="card">
-      {message ? (
-        <div className={`page-alert ${message.includes("تم") ? "success" : "error"}`}>{message}</div>
-      ) : null}
-
       {loading ? (
         <div className="tbl-empty">جاري التحميل...</div>
       ) : !generated ? (

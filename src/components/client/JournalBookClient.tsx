@@ -1,10 +1,10 @@
 "use client";
-import { apiFetch, apiUrl } from "@/lib/api-client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { IconChevronDown, IconInbox, IconNotebook } from "@tabler/icons-react";
 import { journalBookFilename } from "@/lib/export-filenames";
 import { currentMonth, fmtAmt, fmtDate } from "@/lib/format";
+import { useApiQuery } from "@/lib/use-api-query";
 import { ReportExportButtons } from "./ReportExportButtons";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 import { MonthInput } from "@/components/ui/DateInputs";
@@ -29,24 +29,12 @@ interface JournalItem {
 
 export function JournalBookClient() {
   const [month, setMonth] = useState(currentMonth());
-  const [items, setItems] = useState<JournalItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: itemsData, loading } = useApiQuery<JournalItem[]>("/api/client/journals", {
+    params: { month },
+    ttl: "default",
+  });
+  const items = itemsData ?? [];
   const [openId, setOpenId] = useState<string | null>(null);
-
-  const loadItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await apiFetch(`/api/client/journals?month=${month}`);
-      const json = await res.json();
-      if (json.success) setItems(json.data);
-    } finally {
-      setLoading(false);
-    }
-  }, [month]);
-
-  useEffect(() => {
-    loadItems();
-  }, [loadItems]);
 
   return (
     <AppPage>

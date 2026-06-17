@@ -3,6 +3,8 @@ import { apiFetch, apiUrl } from "@/lib/api-client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconListTree, IconPlus, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import type { ChartOfAccount } from "@/lib/types";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 
@@ -22,6 +24,7 @@ const emptyForm = {
 };
 
 export function CoaManageClient() {
+  const toast = useToast();
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -29,7 +32,6 @@ export function CoaManageClient() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const loadAccounts = useCallback(async () => {
     setLoading(true);
@@ -74,36 +76,42 @@ export function CoaManageClient() {
     }
 
     setMessage("");
-    const res = await apiFetch("/api/client/coa", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        account_code: accountCode,
-        account_name: accountName,
-        account_type: form.account_type,
-        parent_code: accountCode.slice(0, -1) || null,
-        allow_payment: form.allow_payment,
-      }),
-    });
-    const json = await res.json();
-    if (!json.success) {
-      setMessage(json.message ?? "فشل الإضافة");
-      return;
-    }
+    try {
+      const res = await apiFetch("/api/client/coa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          account_code: accountCode,
+          account_name: accountName,
+          account_type: form.account_type,
+          parent_code: accountCode.slice(0, -1) || null,
+          allow_payment: form.allow_payment,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setMessage(json.message ?? "فشل الإضافة");
+        toast.error(json.message ?? "فشل إضافة الحساب");
+        return;
+      }
 
-    setModalOpen(false);
-    setForm(emptyForm);
-    setSearch(accountCode);
-    setSuccessMessage(json.message ?? "تمت إضافة الحساب بنجاح");
-    await loadAccounts();
+      setModalOpen(false);
+      setForm(emptyForm);
+      setSearch(accountCode);
+      toast.success(json.message ?? "تمت إضافة الحساب بنجاح");
+      await loadAccounts();
+    } catch {
+      toast.error("خطأ في الاتصال بالخادم");
+    }
   }
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا الحساب؟")) return;
     const res = await apiFetch(`/api/client/coa/${id}`, { method: "DELETE" });
     const json = await res.json();
-    if (json.success) loadAccounts();
-    else alert(json.message ?? "فشل الحذف");
+    if (notifyApiResult(toast, json, { success: "تم حذف الحساب بنجاح", error: "فشل الحذف" })) {
+      await loadAccounts();
+    }
   }
 
   return (
@@ -119,7 +127,6 @@ export function CoaManageClient() {
             className="btn btn-primary btn-sm"
             onClick={() => {
               setMessage("");
-              setSuccessMessage("");
               setForm(emptyForm);
               setModalOpen(true);
             }}
@@ -131,10 +138,6 @@ export function CoaManageClient() {
       />
 
       <div className="card">
-        {successMessage ? (
-          <div className="page-alert success">{successMessage}</div>
-        ) : null}
-
         {loadError ? (
           <div className="tbl-empty" style={{ color: "var(--ruby)" }}>
             {loadError}

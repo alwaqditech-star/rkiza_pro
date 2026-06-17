@@ -9,6 +9,7 @@ import {
   IconUserCircle,
 } from "@tabler/icons-react";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface AdminProfile {
   id: number;
@@ -18,6 +19,7 @@ interface AdminProfile {
 }
 
 export default function AdminProfilePage() {
+  const toast = useToast();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<AdminProfile | null>(null);
@@ -97,10 +99,11 @@ export default function AdminProfilePage() {
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل حفظ التعديلات");
+        toast.error(json.message || "فشل حفظ التعديلات");
         return;
       }
 
-      setSuccess(json.message || "تم تحديث الملف الشخصي بنجاح");
+      toast.success(json.message || "تم تحديث الملف الشخصي بنجاح");
       setPassword("");
       setConfirmPassword("");
       setAvatarFile(null);

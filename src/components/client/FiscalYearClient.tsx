@@ -9,14 +9,16 @@ import {
   IconLockOpen,
 } from "@tabler/icons-react";
 import { fmtAmt, fmtDate } from "@/lib/format";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import type { FiscalStatus } from "@/lib/types";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 export function FiscalYearClient() {
+  const toast = useToast();
   const [status, setStatus] = useState<FiscalStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [newYear, setNewYear] = useState("");
-  const [message, setMessage] = useState("");
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
@@ -50,8 +52,9 @@ export function FiscalYearClient() {
       body: JSON.stringify({ action: "close" }),
     });
     const json = await res.json();
-    setMessage(json.message ?? "");
-    if (json.success) setStatus(json.data);
+    if (notifyApiResult(toast, json, { success: "تم إقفال السنة المالية بنجاح", error: "فشل الإقفال" })) {
+      setStatus(json.data);
+    }
   }
 
   async function handleOpen() {
@@ -65,8 +68,9 @@ export function FiscalYearClient() {
       body: JSON.stringify({ action: "open", year }),
     });
     const json = await res.json();
-    setMessage(json.message ?? "");
-    if (json.success) setStatus(json.data);
+    if (notifyApiResult(toast, json, { success: "تم فتح السنة المالية بنجاح", error: "فشل فتح السنة" })) {
+      setStatus(json.data);
+    }
   }
 
   return (
@@ -83,10 +87,6 @@ export function FiscalYearClient() {
       />
 
       <div className="card">
-      {message ? (
-        <div className="page-alert success">{message}</div>
-      ) : null}
-
       {loading || !status ? (
         <div className="tbl-empty">جاري التحميل...</div>
       ) : (

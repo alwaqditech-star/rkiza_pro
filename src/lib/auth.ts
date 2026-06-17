@@ -1,7 +1,7 @@
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import type { AdminSession, AuthSession, ClientSession } from '@/lib/types';
+import { AUTH_COOKIE_NAME } from '@/lib/auth-constants';
 import { getJwtSecret } from '@/lib/jwt-secret';
 import {
   getClientPermissions,
@@ -10,20 +10,8 @@ import {
 
 export type { AdminSession, ClientSession, AuthSession };
 
-export const AUTH_COOKIE_NAME = 'rikaz_token';
-const BCRYPT_ROUNDS = 10;
+export { AUTH_COOKIE_NAME };
 const TOKEN_EXPIRY = '7d';
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, BCRYPT_ROUNDS);
-}
-
-export async function comparePassword(
-  password: string,
-  hash: string,
-): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
 
 export function signToken(payload: AdminSession | ClientSession): string {
   return jwt.sign(payload, getJwtSecret(), { expiresIn: TOKEN_EXPIRY });

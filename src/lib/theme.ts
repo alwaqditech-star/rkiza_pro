@@ -35,8 +35,8 @@ export function readCachedThemeId(): ThemeId {
 
 export async function fetchAndApplyTheme() {
   try {
-    const { getApiBaseUrl } = await import("./api-client");
-    const res = await fetch(`${getApiBaseUrl()}/api/theme`, { cache: "no-store" });
+    const { apiUrl } = await import("./api-client");
+    const res = await fetch(apiUrl("/api/theme"), { cache: "no-store", credentials: "same-origin" });
     const json = await res.json();
     if (json.success && json.data?.themeId) {
       applyThemeById(json.data.themeId);

@@ -1,19 +1,21 @@
 "use client";
-import { apiFetch, apiUrl } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import {
   IconEdit,
   IconInbox,
   IconPlus,
   IconTrash,
   IconUserPlus,
-  IconUsersGroup,
   IconX,
 } from "@tabler/icons-react";
 import { calcEmployeeTotals } from "@/lib/employee-utils";
 import { fmtAmt, fmtDate, isFutureDate, today } from "@/lib/format";
+import { notifyApiResult } from "@/lib/notify";
 import { employeesFilename } from "@/lib/export-filenames";
+import { useToast } from "@/components/ui/ToastProvider";
+import { useApiQuery } from "@/lib/use-api-query";
 import type { Employee, EmployeeStatus } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { ReportExportButtons } from "./ReportExportButtons";
@@ -40,28 +42,19 @@ function statusBadge(status: EmployeeStatus) {
 }
 
 export function EmployeesClient() {
+  const toast = useToast();
   const { canWrite, canDelete } = useClientPermissions();
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: employeesData,
+    loading,
+    refresh,
+  } = useApiQuery<Employee[]>("/api/client/employees", { ttl: "default" });
+  const employees = employeesData ?? [];
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState("");
-
-  const loadEmployees = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await apiFetch("/api/client/employees");
-      const json = await res.json();
-      if (json.success) setEmployees(json.data);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadEmployees();
-  }, [loadEmployees]);
+  const [saving, setSaving] = useState(false);
 
   const previewTotals = calcEmployeeTotals({
     basic_salary: Number(form.basic_salary || 0),
@@ -97,10 +90,15 @@ export function EmployeesClient() {
   }
 
   async function handleSave() {
+    if (!form.name.trim() || !form.job_title.trim() || !form.basic_salary) {
+      setMessage("الاسم والمسمى والراتب الأساسي مطلوبة");
+      return;
+    }
     if (isFutureDate(form.hire_date)) {
       setMessage("لا يمكن اختيار تاريخ تعيين مستقبلي");
       return;
     }
+
     const payload = {
       name: form.name.trim(),
       job_title: form.job_title.trim(),
@@ -114,29 +112,40 @@ export function EmployeesClient() {
       status: form.status,
     };
 
-    const url = editId ? `/api/client/employees/${editId}` : "/api/client/employees";
-    const method = editId ? "PUT" : "POST";
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-    if (!json.success) {
-      setMessage(json.message ?? "فشل الحفظ");
-      return;
-    }
+    const path = editId ? `/api/client/employees/${editId}` : "/api/client/employees";
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await apiFetch(path, {
+        method: editId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setMessage(json.message ?? "فشل الحفظ");
+        toast.error(json.message ?? "فشل حفظ بيانات الموظف");
+        return;
+      }
 
-    setModalOpen(false);
-    loadEmployees();
+      setModalOpen(false);
+      toast.success(json.message ?? "تم حفظ بيانات الموظف بنجاح");
+      await refresh();
+    } catch {
+      setMessage("خطأ في الاتصال بالخادم");
+      toast.error("خطأ في الاتصال بالخادم");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا الموظف؟")) return;
     const res = await apiFetch(`/api/client/employees/${id}`, { method: "DELETE" });
     const json = await res.json();
-    if (json.success) loadEmployees();
-    else alert(json.message ?? "فشل الحذف");
+    if (notifyApiResult(toast, json, { success: "تم حذف الموظف بنجاح", error: "فشل الحذف" })) {
+      await refresh();
+    }
   }
 
   return (
@@ -368,8 +377,8 @@ export function EmployeesClient() {
             <button type="button" className="btn btn-ghost" onClick={() => setModalOpen(false)}>
               إلغاء
             </button>
-            <button type="button" className="btn btn-primary" onClick={handleSave}>
-              حفظ
+            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
+              {saving ? "جاري الحفظ..." : "حفظ"}
             </button>
           </div>
         </div>

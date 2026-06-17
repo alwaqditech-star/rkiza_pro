@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { IconDownload, IconFileTypePdf } from "@tabler/icons-react";
 import { downloadExportFile } from "@/lib/client-download";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface ReportExportButtonsProps {
   buildExportUrl: (format: "excel" | "pdf") => string;
@@ -15,6 +16,7 @@ export function ReportExportButtons({
   buildFilename,
   disabled = false,
 }: ReportExportButtonsProps) {
+  const toast = useToast();
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
 
@@ -24,8 +26,9 @@ export function ReportExportButtons({
     try {
       const extension = format === "excel" ? "xlsx" : "pdf";
       await downloadExportFile(buildExportUrl(format), buildFilename(extension));
+      toast.success(format === "excel" ? "تم تصدير Excel بنجاح" : "تم تصدير PDF بنجاح");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "خطأ في التصدير");
+      toast.error(err instanceof Error ? err.message : "خطأ في التصدير");
     } finally {
       setLoading(false);
     }

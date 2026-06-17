@@ -12,6 +12,8 @@ import {
 } from "@tabler/icons-react";
 import type { AssociationSettings } from "@/lib/types";
 import { isFutureDate } from "@/lib/format";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 import { DateInput } from "@/components/ui/DateInputs";
 
@@ -37,10 +39,10 @@ const emptySettings = (): AssociationSettings => ({
 });
 
 export function OrgSettingsClient() {
+  const toast = useToast();
   const [form, setForm] = useState<AssociationSettings>(emptySettings());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
   const [stampFile, setStampFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
@@ -65,11 +67,10 @@ export function OrgSettingsClient() {
 
   async function handleSave() {
     if (form.founded_date && isFutureDate(form.founded_date)) {
-      setMessage("لا يمكن اختيار تاريخ تأسيس مستقبلي");
+      toast.warning("لا يمكن اختيار تاريخ تأسيس مستقبلي");
       return;
     }
     setSaving(true);
-    setMessage("");
     try {
       const payload = new FormData();
       Object.entries(form).forEach(([key, value]) => {
@@ -80,12 +81,15 @@ export function OrgSettingsClient() {
 
       const res = await apiFetch("/api/client/org-settings", { method: "PUT", body: payload });
       const json = await res.json();
-      setMessage(json.message ?? (json.success ? "تم الحفظ" : "فشل الحفظ"));
-      if (json.success && json.data) {
-        setForm({ ...emptySettings(), ...json.data });
-        setStampFile(null);
-        setLogoFile(null);
+      if (notifyApiResult(toast, json, { success: "تم حفظ بيانات الجمعية بنجاح", error: "فشل الحفظ" })) {
+        if (json.data) {
+          setForm({ ...emptySettings(), ...json.data });
+          setStampFile(null);
+          setLogoFile(null);
+        }
       }
+    } catch {
+      toast.error("خطأ في الاتصال بالخادم");
     } finally {
       setSaving(false);
     }
@@ -106,10 +110,6 @@ export function OrgSettingsClient() {
       />
 
       <div className="card">
-      {message ? (
-        <div className="page-alert success">{message}</div>
-      ) : null}
-
       {loading ? (
         <div className="tbl-empty">جاري التحميل...</div>
       ) : (

@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconCamera, IconUserCircle, IconX } from "@tabler/icons-react";
 import type { ClientSession } from "@/lib/types";
+import { useToast } from "@/components/ui/ToastProvider";
 
 interface ClientProfileModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ export function ClientProfileModal({
   session,
   onClose,
 }: ClientProfileModalProps) {
+  const toast = useToast();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [associationName, setAssociationName] = useState(session.association_name);
@@ -113,10 +115,11 @@ export function ClientProfileModal({
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل حفظ التعديلات");
+        toast.error(json.message || "فشل حفظ التعديلات");
         return;
       }
 
-      setSuccess(json.message || "تم تحديث الملف الشخصي بنجاح");
+      toast.success(json.message || "تم تحديث الملف الشخصي بنجاح");
       if (json.data?.avatar_url) {
         setAvatarPreview(json.data.avatar_url);
       }

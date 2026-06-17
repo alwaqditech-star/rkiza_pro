@@ -1,7 +1,9 @@
-import { ensureApiToken, getApiToken } from '@/lib/session-bridge';
+import { invalidateCacheForMutation } from '@/lib/api-cache';
+import { API_PROXY_PREFIX } from '@/lib/api-proxy';
 
 /** مصدر البيانات — كل العمليات عبر هذا العنوان */
 export const API_URL = 'https://rkiza-api.vercel.app';
+
 export function getApiBaseUrl(): string {
   const fromEnv =
     (typeof window !== 'undefined'
@@ -11,18 +13,26 @@ export function getApiBaseUrl(): string {
   return (fromEnv || API_URL).replace(/\/$/, '');
 }
 
-/** يبني رابطاً كاملاً: /client/dashboard → https://rkiza-api.vercel.app/api/client/dashboard */
-export function apiUrl(path: string): string {
-  const base = getApiBaseUrl();
+function normalizeApiPath(path: string): string {
   let normalized = path.startsWith('/') ? path : `/${path}`;
   if (!normalized.startsWith('/api/')) {
     normalized = `/api${normalized}`;
   }
-  return `${base}${normalized}`;
+  return normalized;
 }
 
-function readBearerToken(): string | null {
-  return getApiToken();
+/**
+ * في المتصفح: طلبات عبر BFF (/api/proxy) — التوكن يبقى في httpOnly cookie فقط.
+ * على الخادم: اتصال مباشر بـ API الخارجي.
+ */
+export function apiUrl(path: string): string {
+  const normalized = normalizeApiPath(path);
+
+  if (typeof window !== 'undefined') {
+    return `${API_PROXY_PREFIX}${normalized.slice(4)}`;
+  }
+
+  return `${getApiBaseUrl()}${normalized}`;
 }
 
 /** طلب API موحّد — GET / POST / PUT / DELETE */
@@ -30,10 +40,6 @@ export async function apiFetch(
   path: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  if (typeof window !== 'undefined') {
-    await ensureApiToken();
-  }
-
   const headers = new Headers(init.headers);
 
   if (
@@ -44,14 +50,22 @@ export async function apiFetch(
     headers.set('Content-Type', 'application/json');
   }
 
-  const token = readBearerToken();
-  if (token && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
-
-  return fetch(apiUrl(path), {
+  const method = (init.method ?? 'GET').toUpperCase();
+  const response = await fetch(apiUrl(path), {
     ...init,
     headers,
-    credentials: 'include',
+    credentials: 'same-origin',
   });
+
+  if (method !== 'GET' && method !== 'HEAD' && response.ok) {
+    invalidateCacheForMutation(path);
+  }
+
+  if (response.status === 401 && typeof window !== 'undefined') {
+    const { clearSessionCookie } = await import('@/lib/session-bridge');
+    await clearSessionCookie().catch(() => undefined);
+    window.location.assign('/');
+  }
+
+  return response;
 }

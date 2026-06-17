@@ -18,6 +18,8 @@ import {
 } from "@tabler/icons-react";
 import { arabicAmount, fmtAmt, fmtDate, isFutureDate, today } from "@/lib/format";
 import { downloadExportFile } from "@/lib/client-download";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import type { VoucherType } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
@@ -83,6 +85,7 @@ const PAYMENT_ACCOUNTS: CoaOption[] = [
 ];
 
 export function VouchersManager({ voucherType }: VouchersManagerProps) {
+  const toast = useToast();
   const { canWrite, canDelete } = useClientPermissions();
   const isReceipt = voucherType === "receipt";
   const [items, setItems] = useState<VoucherItem[]>([]);
@@ -182,10 +185,12 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
       const json = await res.json();
       if (!json.success) {
         setError(json.message || "فشل حفظ السند");
+        toast.error(json.message || "فشل حفظ السند");
         return;
       }
 
       setModalOpen(false);
+      toast.success(json.message ?? (isReceipt ? "تم حفظ سند القبض بنجاح" : "تم حفظ سند الصرف بنجاح"));
       setForm({
         date: today(),
         beneficiary: "",
@@ -208,6 +213,7 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
       }
     } catch {
       setError("خطأ في الاتصال بالخادم");
+      toast.error("خطأ في الاتصال بالخادم");
     } finally {
       setSaving(false);
     }
@@ -215,8 +221,11 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا السند؟")) return;
-    await apiFetch(`/api/client/vouchers/${id}`, { method: "DELETE" });
-    await loadItems();
+    const res = await apiFetch(`/api/client/vouchers/${id}`, { method: "DELETE" });
+    const json = await res.json();
+    if (notifyApiResult(toast, json, { success: "تم حذف السند بنجاح", error: "فشل الحذف" })) {
+      await loadItems();
+    }
   }
 
   async function handlePrintPdf(id: number, voucherNumber: string) {
@@ -227,8 +236,9 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
         `/api/client/vouchers/${id}/export-pdf`,
         `${prefix}-${voucherNumber.replace(/[^\w-]+/g, "_")}.pdf`,
       );
+      toast.success("تم تصدير السند بنجاح");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "فشل تصدير PDF");
+      toast.error(err instanceof Error ? err.message : "فشل تصدير PDF");
     } finally {
       setPrintingId(null);
     }
@@ -246,8 +256,9 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
         `/api/client/vouchers/export-excel?type=${voucherType}`,
         `${prefix}-${new Date().toISOString().slice(0, 10)}.xlsx`,
       );
+      toast.success("تم تصدير Excel بنجاح");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "خطأ في تصدير Excel");
+      toast.error(err instanceof Error ? err.message : "خطأ في تصدير Excel");
     } finally {
       setExportingExcel(false);
     }
@@ -261,8 +272,9 @@ export function VouchersManager({ voucherType }: VouchersManagerProps) {
         `/api/client/vouchers/export-pdf?type=${voucherType}`,
         `${prefix}-${new Date().toISOString().slice(0, 10)}.pdf`,
       );
+      toast.success("تم تصدير PDF بنجاح");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "خطأ في تصدير PDF");
+      toast.error(err instanceof Error ? err.message : "خطأ في تصدير PDF");
     } finally {
       setExportingListPdf(false);
     }

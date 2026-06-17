@@ -751,6 +751,160 @@ tbody tr:hover td {
   border: 1px solid rgba(26, 122, 74, 0.15);
 }
 
+/* ===== Toast notifications ===== */
+.toast-stack {
+  position: fixed;
+  top: calc(var(--topbar, 60px) + 14px);
+  left: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(380px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-float);
+  animation: toastIn 0.32s var(--ease-out);
+  pointer-events: auto;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--ink);
+  padding-top: 5px;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--mist);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background var(--transition), color var(--transition);
+}
+
+.toast-close:hover {
+  background: var(--fog);
+  color: var(--slate);
+}
+
+.toast-success .toast-icon {
+  background: var(--emerald-pale);
+  color: var(--emerald);
+}
+
+.toast-error .toast-icon {
+  background: var(--ruby-pale);
+  color: var(--ruby);
+}
+
+.toast-info .toast-icon {
+  background: var(--teal-pale);
+  color: var(--teal-dark);
+}
+
+.toast-warning .toast-icon {
+  background: var(--gold-pale);
+  color: var(--gold);
+}
+
+.toast-success {
+  border-color: rgba(26, 122, 74, 0.18);
+}
+
+.toast-error {
+  border-color: rgba(176, 48, 80, 0.18);
+}
+
+@media (max-width: 768px) {
+  .toast-stack {
+    top: auto;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
+
+/* ===== Loading skeleton ===== */
+.loading-block {
+  padding: 24px 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.loading-block-shimmer {
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--fog) 25%, var(--silver) 50%, var(--fog) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.loading-block-shimmer.short {
+  width: 40%;
+}
+
+.loading-block-shimmer.medium {
+  width: 70%;
+}
+
+.loading-block-label {
+  font-size: 13px;
+  color: var(--mist);
+  text-align: center;
+  margin-top: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.virtual-tbl-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);
+}
+
 .bank-list {
   padding: 16px;
   display: grid;

@@ -4,7 +4,7 @@ import path from 'node:path';
 const apiDir = path.join(process.cwd(), 'src', 'app', 'api');
 const allowedRoutes = new Set([
   path.normalize(path.join(apiDir, 'session', 'route.ts')),
-  path.normalize(path.join(apiDir, 'session', 'token', 'route.ts')),
+  path.normalize(path.join(apiDir, 'proxy', '[[...path]]', 'route.ts')),
 ]);
 
 function findRouteFiles(dir) {
@@ -27,8 +27,8 @@ const disallowed = routes.filter((file) => !allowedRoutes.has(file));
 if (disallowed.length > 0) {
   console.error(
     '\n[خطأ] مسارات API محلية غير مسموحة — احذفها.\n' +
-      '       البيانات عبر https://rkiza-api.vercel.app\n' +
-      '       المسموح فقط: /api/session (جسر الجلسة)\n',
+      '       البيانات عبر BFF /api/proxy → https://rkiza-api.vercel.app\n' +
+      '       المسموح: /api/session و /api/proxy\n',
   );
   for (const file of disallowed) {
     console.error(`  ✗ ${path.relative(process.cwd(), file)}`);
@@ -36,4 +36,4 @@ if (disallowed.length > 0) {
   process.exit(1);
 }
 
-console.log('[OK] البيانات → https://rkiza-api.vercel.app | الجلسة → /api/session');
+console.log('[OK] البيانات → /api/proxy → rkiza-api | الجلسة → /api/session');

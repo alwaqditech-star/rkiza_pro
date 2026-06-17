@@ -10,6 +10,8 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import { fmtAmt } from "@/lib/format";
 import type { BankAccount, BankAccountStatus } from "@/lib/types";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
@@ -46,6 +48,7 @@ const emptyForm = {
 };
 
 export function BanksClient() {
+  const toast = useToast();
   const [items, setItems] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -96,28 +99,36 @@ export function BanksClient() {
       ...form,
       opening_balance: Number(form.opening_balance || 0),
     };
-    const url = editId ? `/api/client/banks/${editId}` : "/api/client/banks";
-    const method = editId ? "PUT" : "POST";
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json();
-    if (!json.success) {
-      setMessage(json.message ?? "فشل الحفظ");
-      return;
+    const path = editId ? `/api/client/banks/${editId}` : "/api/client/banks";
+    setMessage("");
+    try {
+      const res = await apiFetch(path, {
+        method: editId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setMessage(json.message ?? "فشل الحفظ");
+        toast.error(json.message ?? "فشل حفظ الحساب البنكي");
+        return;
+      }
+      setModalOpen(false);
+      toast.success(json.message ?? "تم حفظ الحساب البنكي بنجاح");
+      loadItems();
+    } catch {
+      setMessage("خطأ في الاتصال بالخادم");
+      toast.error("خطأ في الاتصال بالخادم");
     }
-    setModalOpen(false);
-    loadItems();
   }
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا الحساب البنكي؟")) return;
     const res = await apiFetch(`/api/client/banks/${id}`, { method: "DELETE" });
     const json = await res.json();
-    if (json.success) loadItems();
-    else alert(json.message ?? "فشل الحذف");
+    if (notifyApiResult(toast, json, { success: "تم حذف الحساب البنكي بنجاح", error: "فشل الحذف" })) {
+      loadItems();
+    }
   }
 
   const activeCount = useMemo(() => items.filter((item) => item.status === "active").length, [items]);

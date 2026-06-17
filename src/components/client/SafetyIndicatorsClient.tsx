@@ -17,6 +17,8 @@ import {
   type SafetyCalculationResult,
 } from "@/lib/safety-indicators";
 import type { SafetyFinancialInput } from "@/lib/types";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 
@@ -42,6 +44,7 @@ const emptyInput = (year: number): SafetyFinancialInput => ({
 });
 
 export function SafetyIndicatorsClient() {
+  const toast = useToast();
   const { canWrite } = useClientPermissions();
   const fiscalYear = new Date().getFullYear();
   const [input, setInput] = useState<SafetyFinancialInput>(emptyInput(fiscalYear));
@@ -84,7 +87,7 @@ export function SafetyIndicatorsClient() {
       body: JSON.stringify(input),
     });
     const json = await res.json();
-    if (json.success) {
+    if (notifyApiResult(toast, json, { success: "تم حفظ المؤشرات بنجاح", error: "فشل الحفظ" })) {
       setResults(json.data.results);
     }
   }
@@ -92,7 +95,10 @@ export function SafetyIndicatorsClient() {
   async function autoFill() {
     const dashRes = await apiFetch("/api/client/dashboard");
     const dashJson = await dashRes.json();
-    if (!dashJson.success) return;
+    if (!dashJson.success) {
+      toast.error("تعذّر جلب بيانات اللوحة");
+      return;
+    }
 
     const next = {
       ...input,
@@ -104,6 +110,7 @@ export function SafetyIndicatorsClient() {
     };
     setInput(next);
     recalc(next);
+    toast.success("تم ملء البيانات تلقائياً من لوحة التحكم");
   }
 
   const colorMap = {

@@ -1,7 +1,6 @@
 "use client";
-import { apiFetch } from "@/lib/api-client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   IconBooks,
   IconCalendarMonth,
@@ -15,6 +14,13 @@ import {
   ledgerFilename,
   statementFilename,
 } from "@/lib/export-filenames";
+import { useLazyApiQuery, useApiQuery } from "@/lib/use-api-query";
+import {
+  useVirtualWindow,
+  VirtualTableBody,
+  VirtualTableWrap,
+} from "@/components/ui/VirtualTableBody";
+import { useToast } from "@/components/ui/ToastProvider";
 import { ReportExportButtons } from "./ReportExportButtons";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 import { DateInput, MonthInput } from "@/components/ui/DateInputs";
@@ -63,6 +69,7 @@ function balanceLabel(value: number) {
 }
 
 export function AccountReportClient({ variant }: AccountReportClientProps) {
+  const toast = useToast();
   const isLedger = variant === "ledger";
   const isMonthly = variant === "monthly";
   const title = isLedger
@@ -78,53 +85,39 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
       : "كشف تفصيلي لحركة حساب خلال فترة";
   const Icon = isLedger ? IconBooks : isMonthly ? IconCalendarMonth : IconFileText;
 
-  const [accounts, setAccounts] = useState<AccountOption[]>([]);
+  const { data: accountsData } = useApiQuery<AccountOption[]>(
+    "/api/client/journals/accounts",
+    { ttl: "static" },
+  );
+  const accounts = accountsData ?? [];
+  const { data, loading, error, fetch, reset } = useLazyApiQuery<LedgerData>();
+
   const [account, setAccount] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [month, setMonth] = useState(currentMonth());
-  const [data, setData] = useState<LedgerData | null>(null);
-  const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    apiFetch("/api/client/journals/accounts")
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success) setAccounts(json.data);
-      })
-      .catch(() => undefined);
-  }, []);
 
   async function runSearch(nextFrom = from, nextTo = to) {
     if (!account) {
-      setError("اختر الحساب أولاً");
+      toast.warning("اختر الحساب أولاً");
       return;
     }
-    setError("");
-    setLoading(true);
+
     setSearched(true);
-    try {
-      const params = new URLSearchParams({ account });
-      if (nextFrom) params.set("from", nextFrom);
-      if (nextTo) params.set("to", nextTo);
-      const endpoint = variant === "statement" || variant === "monthly"
+    const endpoint =
+      variant === "statement" || variant === "monthly"
         ? "/api/client/statement"
         : "/api/client/ledger";
-      const res = await apiFetch(`${endpoint}?${params.toString()}`);
-      const json = await res.json();
-      if (!json.success) {
-        setError(json.message || "فشل تحميل البيانات");
-        setData(null);
-        return;
-      }
-      setData(json.data);
-    } catch {
-      setError("خطأ في الاتصال بالخادم");
-      setData(null);
-    } finally {
-      setLoading(false);
+
+    const result = await fetch(
+      endpoint,
+      { account, from: nextFrom || undefined, to: nextTo || undefined },
+      { ttl: "report" },
+    );
+
+    if (result) {
+      toast.success("تم تحميل البيانات بنجاح");
     }
   }
 
@@ -132,7 +125,7 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
     const range = monthRange(month);
     setFrom(range.from);
     setTo(range.to);
-    runSearch(range.from, range.to);
+    void runSearch(range.from, range.to);
   }
 
   function clearFilters() {
@@ -140,9 +133,8 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
     setFrom("");
     setTo("");
     setMonth(currentMonth());
-    setData(null);
     setSearched(false);
-    setError("");
+    reset();
   }
 
   function buildExportUrl(format: "excel" | "pdf") {
@@ -174,7 +166,9 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
     );
   }
 
-  const canExport = Boolean(account && data && (data.movements.length > 0 || data.opening_balance !== 0));
+  const canExport = Boolean(
+    account && data && (data.movements.length > 0 || data.opening_balance !== 0),
+  );
 
   return (
     <AppPage>
@@ -192,169 +186,181 @@ export function AccountReportClient({ variant }: AccountReportClientProps) {
       />
 
       <div className="card">
-
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          alignItems: "flex-end",
-          flexWrap: "wrap",
-          padding: "14px 0",
-          borderBottom: "1px solid var(--fog)",
-          marginBottom: 16,
-        }}
-      >
-        <div className="form-group" style={{ minWidth: 260 }}>
-          <label>الحساب</label>
-          <select
-            value={account}
-            onChange={(e) => setAccount(e.target.value)}
-            style={{
-              padding: "8px 12px",
-              border: "1.5px solid var(--silver)",
-              borderRadius: "var(--radius-sm)",
-              fontFamily: "var(--font)",
-              fontSize: 13,
-              width: "100%",
-            }}
-          >
-            <option value="">— اختر الحساب —</option>
-            {accounts.map((acc) => (
-              <option key={acc.account_code} value={acc.account_code}>
-                {acc.account_code} - {acc.account_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {isMonthly ? (
-          <div className="form-group">
-            <label>الشهر</label>
-            <MonthInput
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
+        <div
+          style={{
+            display: "flex",
+            gap: 10,
+            alignItems: "flex-end",
+            flexWrap: "wrap",
+            padding: "14px 0",
+            borderBottom: "1px solid var(--fog)",
+            marginBottom: 16,
+          }}
+        >
+          <div className="form-group" style={{ minWidth: 260 }}>
+            <label>الحساب</label>
+            <select
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
               style={{
                 padding: "8px 12px",
                 border: "1.5px solid var(--silver)",
                 borderRadius: "var(--radius-sm)",
                 fontFamily: "var(--font)",
                 fontSize: 13,
+                width: "100%",
               }}
-            />
+            >
+              <option value="">— اختر الحساب —</option>
+              {accounts.map((acc) => (
+                <option key={acc.account_code} value={acc.account_code}>
+                  {acc.account_code} - {acc.account_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {isMonthly ? (
+            <div className="form-group">
+              <label>الشهر</label>
+              <MonthInput
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  border: "1.5px solid var(--silver)",
+                  borderRadius: "var(--radius-sm)",
+                  fontFamily: "var(--font)",
+                  fontSize: 13,
+                }}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="form-group">
+                <label>{isLedger ? "الفترة من" : "من تاريخ"}</label>
+                <DateInput
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1.5px solid var(--silver)",
+                    borderRadius: "var(--radius-sm)",
+                    fontFamily: "var(--font)",
+                    fontSize: 13,
+                  }}
+                />
+              </div>
+              <div className="form-group">
+                <label>{isLedger ? "إلى" : "إلى تاريخ"}</label>
+                <DateInput
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1.5px solid var(--silver)",
+                    borderRadius: "var(--radius-sm)",
+                    fontFamily: "var(--font)",
+                    fontSize: 13,
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => (isMonthly ? handleMonthlySearch() : runSearch())}
+            disabled={loading}
+          >
+            <IconSearch size={16} stroke={1.8} />
+            {loading ? "جاري العرض..." : isMonthly ? "عرض" : isLedger ? "عرض الحركة" : "عرض الكشف"}
+          </button>
+          <button type="button" className="btn btn-ghost" onClick={clearFilters}>
+            <IconX size={16} stroke={1.8} />
+            مسح
+          </button>
+        </div>
+
+        {error ? (
+          <div className="login-error" style={{ display: "block", marginBottom: 12 }}>
+            {error}
+          </div>
+        ) : null}
+
+        {loading ? (
+          <div className="tbl-empty">جاري التحميل...</div>
+        ) : !searched || !data ? (
+          <div className="tbl-empty">
+            <Icon size={36} stroke={1.2} style={{ opacity: 0.4 }} />
+            {isLedger
+              ? "اختر حساباً لعرض حركته"
+              : isMonthly
+                ? "اختر الحساب والشهر ثم اضغط عرض"
+                : "اختر الحساب والفترة ثم اضغط عرض الكشف"}
+          </div>
+        ) : !data.movements.length && !data.opening_balance ? (
+          <div className="tbl-empty">
+            <IconInbox size={36} stroke={1.2} style={{ opacity: 0.4 }} />
+            لا توجد حركات في هذه الفترة
+          </div>
+        ) : variant === "statement" || variant === "monthly" ? (
+          <div style={{ border: "1px solid var(--silver)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
+            <div
+              style={{
+                background: "linear-gradient(135deg,#1B2A4A,#2C4A7C)",
+                color: "#fff",
+                padding: "16px 20px",
+              }}
+            >
+              <div style={{ fontSize: 17, fontWeight: 700 }}>
+                كشف حساب — {data.account_name}
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4 }}>
+                {from ? `من: ${fmtDate(from)}` : "من البداية"} —{" "}
+                {to ? `إلى: ${fmtDate(to)}` : "إلى النهاية"} | رمز الحساب: {data.account_code}
+              </div>
+            </div>
+            <MovementsTable data={data} statementStyle />
           </div>
         ) : (
-          <>
-            <div className="form-group">
-              <label>{isLedger ? "الفترة من" : "من تاريخ"}</label>
-              <DateInput
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                style={{
-                  padding: "8px 12px",
-                  border: "1.5px solid var(--silver)",
-                  borderRadius: "var(--radius-sm)",
-                  fontFamily: "var(--font)",
-                  fontSize: 13,
-                }}
-              />
+          <div className="ledger-card">
+            <div className="ledger-head">
+              <div>
+                <h3>{data.account_name}</h3>
+                <p>
+                  رمز الحساب: {data.account_code}
+                  {from || to
+                    ? ` | الفترة: ${from ? fmtDate(from) : "البداية"} — ${to ? fmtDate(to) : "النهاية"}`
+                    : ""}
+                </p>
+              </div>
+              <div className="ledger-balance">الرصيد: {balanceLabel(data.closing_balance)} ر.س</div>
             </div>
-            <div className="form-group">
-              <label>{isLedger ? "إلى" : "إلى تاريخ"}</label>
-              <DateInput
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                style={{
-                  padding: "8px 12px",
-                  border: "1.5px solid var(--silver)",
-                  borderRadius: "var(--radius-sm)",
-                  fontFamily: "var(--font)",
-                  fontSize: 13,
-                }}
-              />
-            </div>
-          </>
+            <MovementsTable data={data} statementStyle={false} />
+          </div>
         )}
-
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => (isMonthly ? handleMonthlySearch() : runSearch())}
-        >
-          <IconSearch size={16} stroke={1.8} />
-          {isMonthly ? "عرض" : isLedger ? "عرض الحركة" : "عرض الكشف"}
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={clearFilters}>
-          <IconX size={16} stroke={1.8} />
-          مسح
-        </button>
-      </div>
-
-      {error ? (
-        <div className="login-error" style={{ display: "block", marginBottom: 12 }}>
-          {error}
-        </div>
-      ) : null}
-
-      {loading ? (
-        <div className="tbl-empty">جاري التحميل...</div>
-      ) : !searched || !data ? (
-        <div className="tbl-empty">
-          <Icon size={36} stroke={1.2} style={{ opacity: 0.4 }} />
-          {isLedger
-            ? "اختر حساباً لعرض حركته"
-            : isMonthly
-              ? "اختر الحساب والشهر ثم اضغط عرض"
-              : "اختر الحساب والفترة ثم اضغط عرض الكشف"}
-        </div>
-      ) : !data.movements.length && !data.opening_balance ? (
-        <div className="tbl-empty">
-          <IconInbox size={36} stroke={1.2} style={{ opacity: 0.4 }} />
-          لا توجد حركات في هذه الفترة
-        </div>
-      ) : variant === "statement" || variant === "monthly" ? (
-        <div style={{ border: "1px solid var(--silver)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
-          <div
-            style={{
-              background: "linear-gradient(135deg,#1B2A4A,#2C4A7C)",
-              color: "#fff",
-              padding: "16px 20px",
-            }}
-          >
-            <div style={{ fontSize: 17, fontWeight: 700 }}>
-              كشف حساب — {data.account_name}
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4 }}>
-              {from ? `من: ${fmtDate(from)}` : "من البداية"} —{" "}
-              {to ? `إلى: ${fmtDate(to)}` : "إلى النهاية"} | رمز الحساب: {data.account_code}
-            </div>
-          </div>
-          {renderMovementsTable(data, true)}
-        </div>
-      ) : (
-        <div className="ledger-card">
-          <div className="ledger-head">
-            <div>
-              <h3>{data.account_name}</h3>
-              <p>
-                رمز الحساب: {data.account_code}
-                {from || to
-                  ? ` | الفترة: ${from ? fmtDate(from) : "البداية"} — ${to ? fmtDate(to) : "النهاية"}`
-                  : ""}
-              </p>
-            </div>
-            <div className="ledger-balance">الرصيد: {balanceLabel(data.closing_balance)} ر.س</div>
-          </div>
-          {renderMovementsTable(data, false)}
-        </div>
-      )}
       </div>
     </AppPage>
   );
 }
 
-function renderMovementsTable(data: LedgerData, statementStyle: boolean) {
+function MovementsTable({
+  data,
+  statementStyle,
+}: {
+  data: LedgerData;
+  statementStyle: boolean;
+}) {
+  const virtual = useVirtualWindow(data.movements.length);
+
   return (
-    <div className="tbl-wrap">
+    <VirtualTableWrap
+      enabled={virtual.useVirtual}
+      maxHeight={virtual.maxHeight}
+      onScroll={virtual.onScroll}
+    >
       <table className={statementStyle ? undefined : "ledger-table"}>
         <thead>
           <tr>
@@ -383,36 +389,45 @@ function renderMovementsTable(data: LedgerData, statementStyle: boolean) {
               </td>
             </tr>
           ) : null}
-          {data.movements.map((movement, index) => (
-            <tr
-              key={`${index}-${movement.journal_number}-${movement.journal_date}-${movement.debit_amount}-${movement.credit_amount}`}
-            >
-              <td>{fmtDate(movement.journal_date)}</td>
-              <td>
-                <span className="badge badge-teal" style={{ fontSize: 10 }}>
-                  {movement.journal_number}
-                </span>
-              </td>
-              <td>{movement.description}</td>
-              <td className="dr-val">
-                {movement.debit_amount > 0 ? fmtAmt(movement.debit_amount) : "—"}
-              </td>
-              <td className="cr-val">
-                {movement.credit_amount > 0 ? fmtAmt(movement.credit_amount) : "—"}
-              </td>
-              <td
-                style={{
-                  fontWeight: 700,
-                  direction: "ltr",
-                  textAlign: "right",
-                  color: movement.running_balance >= 0 ? "var(--emerald)" : "var(--ruby)",
-                }}
-              >
-                {balanceLabel(movement.running_balance)}
-              </td>
-            </tr>
-          ))}
-          <tr className={statementStyle ? undefined : "total-row"} style={statementStyle ? { background: "var(--teal-pale)", fontWeight: 700 } : undefined}>
+          <VirtualTableBody
+            items={data.movements}
+            colSpan={6}
+            window={virtual}
+            getKey={(movement, index) =>
+              `${index}-${movement.journal_number}-${movement.journal_date}-${movement.debit_amount}-${movement.credit_amount}`
+            }
+            renderCells={(movement) => (
+              <>
+                <td>{fmtDate(movement.journal_date)}</td>
+                <td>
+                  <span className="badge badge-teal" style={{ fontSize: 10 }}>
+                    {movement.journal_number}
+                  </span>
+                </td>
+                <td>{movement.description}</td>
+                <td className="dr-val">
+                  {movement.debit_amount > 0 ? fmtAmt(movement.debit_amount) : "—"}
+                </td>
+                <td className="cr-val">
+                  {movement.credit_amount > 0 ? fmtAmt(movement.credit_amount) : "—"}
+                </td>
+                <td
+                  style={{
+                    fontWeight: 700,
+                    direction: "ltr",
+                    textAlign: "right",
+                    color: movement.running_balance >= 0 ? "var(--emerald)" : "var(--ruby)",
+                  }}
+                >
+                  {balanceLabel(movement.running_balance)}
+                </td>
+              </>
+            )}
+          />
+          <tr
+            className={statementStyle ? undefined : "total-row"}
+            style={statementStyle ? { background: "var(--teal-pale)", fontWeight: 700 } : undefined}
+          >
             <td colSpan={3} style={{ textAlign: "center" }}>
               {statementStyle ? "الإجمالي" : "إجمالي الفترة"}
             </td>
@@ -424,6 +439,6 @@ function renderMovementsTable(data: LedgerData, statementStyle: boolean) {
           </tr>
         </tbody>
       </table>
-    </div>
+    </VirtualTableWrap>
   );
 }

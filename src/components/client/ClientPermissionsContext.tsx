@@ -23,11 +23,11 @@ export function useClientPermissions(): ClientPermissions {
   const value = useContext(ClientPermissionsContext);
   if (!value) {
     return {
-      roleLabel: "مدير الجمعية",
-      canRead: true,
-      canWrite: true,
-      canDelete: true,
-      canSettings: true,
+      roleLabel: "—",
+      canRead: false,
+      canWrite: false,
+      canDelete: false,
+      canSettings: false,
     };
   }
   return value;

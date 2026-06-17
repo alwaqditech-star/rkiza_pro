@@ -9,13 +9,15 @@ import {
   type ThemeId,
 } from "@/lib/theme-presets";
 import { applyThemeById } from "@/lib/theme";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 export function ThemeSettingsClient() {
+  const toast = useToast();
   const [selectedId, setSelectedId] = useState<ThemeId>(DEFAULT_THEME_ID);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const loadTheme = useCallback(async () => {
@@ -43,7 +45,6 @@ export function ThemeSettingsClient() {
     setSelectedId(themeId);
     applyThemeById(themeId);
     setSaving(true);
-    setMessage("");
     setError("");
 
     try {
@@ -52,12 +53,11 @@ export function ThemeSettingsClient() {
         body: JSON.stringify({ themeId }),
       });
       const json = await res.json();
-      if (!json.success) {
-        setError(json.message || "فشل حفظ المظهر");
+      if (!notifyApiResult(toast, json, { success: "تم تطبيق المظهر بنجاح", error: "فشل حفظ المظهر" })) {
         return;
       }
-      setMessage(json.message || "تم تطبيق المظهر على النظام بالكامل");
     } catch {
+      toast.error("خطأ في الاتصال بالخادم");
       setError("خطأ في الاتصال بالخادم");
     } finally {
       setSaving(false);
@@ -88,7 +88,6 @@ export function ThemeSettingsClient() {
       />
 
       <div className="card">
-      {message ? <div className="page-alert success">{message}</div> : null}
       {error ? <div className="page-alert error">{error}</div> : null}
 
       <div className="settings-section">

@@ -1,22 +1,19 @@
 import { NextResponse } from 'next/server';
 import { AUTH_COOKIE_NAME, verifyToken } from '@/lib/auth';
-
-const API_BASE =
-  (process.env.NEXT_PUBLIC_API_URL ||
-    process.env.API_BASE_URL ||
-    'https://rkiza-api.vercel.app').replace(/\/$/, '');
+import { getUpstreamApiBase, isSameOriginRequest } from '@/lib/api-proxy';
+import { isJwtSecretConfigured } from '@/lib/jwt-secret';
 
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: 'strict' as const,
   path: '/',
   maxAge: 60 * 60 * 24 * 7,
 };
 
 async function verifyTokenViaApi(token: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/api/auth/verify`, {
+    const res = await fetch(`${getUpstreamApiBase()}/api/auth/verify`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });
@@ -27,6 +24,10 @@ async function verifyTokenViaApi(token: string): Promise<boolean> {
 }
 
 async function isTokenValid(token: string): Promise<boolean> {
+  if (!isJwtSecretConfigured()) {
+    return verifyTokenViaApi(token);
+  }
+
   try {
     verifyToken(token);
     return true;
@@ -36,6 +37,13 @@ async function isTokenValid(token: string): Promise<boolean> {
 }
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json(
+      { success: false, message: 'طلب غير مسموح' },
+      { status: 403 },
+    );
+  }
+
   const body = (await request.json()) as { token?: string };
   const token = body.token?.trim();
   if (!token) {
@@ -57,8 +65,15 @@ export async function POST(request: Request) {
   return response;
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json(
+      { success: false, message: 'طلب غير مسموح' },
+      { status: 403 },
+    );
+  }
+
   const response = NextResponse.json({ success: true });
-  response.cookies.delete(AUTH_COOKIE_NAME);
+  response.cookies.set(AUTH_COOKIE_NAME, '', { ...cookieOptions, maxAge: 0 });
   return response;
 }

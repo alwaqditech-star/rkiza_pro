@@ -10,6 +10,8 @@ import {
   IconUsers,
   IconX,
 } from "@tabler/icons-react";
+import { notifyApiResult } from "@/lib/notify";
+import { useToast } from "@/components/ui/ToastProvider";
 import type { AssociationUserRole, AssociationUserStatus, AssociationUserView } from "@/lib/types";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 
@@ -22,6 +24,7 @@ const emptyForm = {
 };
 
 export function UsersClient() {
+  const toast = useToast();
   const [users, setUsers] = useState<AssociationUserView[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -66,28 +69,36 @@ export function UsersClient() {
   }
 
   async function handleSave() {
-    const url = editId ? `/api/client/users/${editId}` : "/api/client/users";
-    const method = editId ? "PUT" : "POST";
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const json = await res.json();
-    if (!json.success) {
-      setMessage(json.message ?? "فشل الحفظ");
-      return;
+    const path = editId ? `/api/client/users/${editId}` : "/api/client/users";
+    setMessage("");
+    try {
+      const res = await apiFetch(path, {
+        method: editId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setMessage(json.message ?? "فشل الحفظ");
+        toast.error(json.message ?? "فشل حفظ المستخدم");
+        return;
+      }
+      setModalOpen(false);
+      toast.success(json.message ?? (editId ? "تم تحديث المستخدم بنجاح" : "تم إضافة المستخدم بنجاح"));
+      loadUsers();
+    } catch {
+      setMessage("خطأ في الاتصال بالخادم");
+      toast.error("خطأ في الاتصال بالخادم");
     }
-    setModalOpen(false);
-    loadUsers();
   }
 
   async function handleDelete(id: number) {
     if (!confirm("هل تريد حذف هذا المستخدم؟")) return;
     const res = await apiFetch(`/api/client/users/${id}`, { method: "DELETE" });
     const json = await res.json();
-    if (json.success) loadUsers();
-    else alert(json.message ?? "فشل الحذف");
+    if (notifyApiResult(toast, json, { success: "تم حذف المستخدم بنجاح", error: "فشل الحذف" })) {
+      loadUsers();
+    }
   }
 
   return (

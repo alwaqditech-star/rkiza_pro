@@ -2,7 +2,14 @@
 
 مشروع **الواجهة فقط** على `http://localhost:3000` — لا يتصل بقاعدة البيانات مباشرة.
 
-كل عمليات البيانات (قراءة/كتابة/تسجيل دخول) تتم عبر **`api_project`** على المنفذ `3001`.
+كل عمليات البيانات تتم عبر **`api_project`** (محلياً على `3001` أو `rkiza-api.vercel.app` في الإنتاج).
+
+## الأمان
+
+- **JWT** محفوظ في **httpOnly cookie** فقط — لا يُخزَّن في `sessionStorage` ولا يُعرَّض لـ JavaScript
+- طلبات المتصفح تمر عبر **BFF** على `/api/proxy/*` الذي يضيف التوكن من الكوكي server-side
+- مسارات الـ proxy مقيّدة: `auth`, `client`, `admin`, `theme` فقط
+- رؤوس أمان: CSP, HSTS, X-Frame-Options, وغيرها
 
 ## التشغيل
 
@@ -34,12 +41,26 @@ npm run dev:all
 ## الهيكل
 
 ```
-localhost:3000  →  rikaz_project  (صفحات + وكيل /api/*)
+localhost:3000  →  rikaz_project  (صفحات + /api/session + /api/proxy)
 localhost:3001  →  api_project      (قاعدة البيانات + كل الـ API)
+                  أو rkiza-api.vercel.app في الإنتاج
 ```
+
+المتصفح يرسل الطلبات إلى `/api/proxy/...` والخادم يوجّهها إلى API الخارجي مع التوكن من الكوكي.
 
 ## الإعداد
 
-انسخ `.env.example` إلى `.env.local` — لا تضف بيانات MySQL هنا.
+```powershell
+copy .env.example .env.local
+```
+
+| المتغير | الوصف |
+|---------|--------|
+| `NEXT_PUBLIC_API_URL` | عنوان API البيانات |
+| `JWT_SECRET` | يجب أن يطابق `api_project` — **إجباري في الإنتاج** |
 
 بيانات قاعدة البيانات في `api_project/.env` فقط.
+
+## الإنتاج (Vercel)
+
+عيّن `JWT_SECRET` و`NEXT_PUBLIC_API_URL` في إعدادات مشروع الواجهة على Vercel — لا تعتمد على القيم الافتراضية.

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -11,9 +11,10 @@ import {
   IconFileInvoice,
   IconInbox,
 } from "@tabler/icons-react";
-import { apiFetch } from "@/lib/api-client";
 import { fmtAmt } from "@/lib/format";
+import { useApiQuery } from "@/lib/use-api-query";
 import { permissionDeniedMessage, type ClientAccessLevel } from "@/lib/client-permissions";
+import { LoadingBlock } from "@/components/ui/LoadingBlock";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 
 interface VoucherSummary {
@@ -34,7 +35,7 @@ interface DashboardData {
 
 export default function ClientDashboardPage() {
   return (
-    <Suspense fallback={<div className="tbl-empty">جاري تحميل لوحة التحكم...</div>}>
+    <Suspense fallback={<LoadingBlock label="جاري تحميل لوحة التحكم..." />}>
       <ClientDashboardContent />
     </Suspense>
   );
@@ -44,36 +45,12 @@ function ClientDashboardContent() {
   const searchParams = useSearchParams();
   const accessDenied = searchParams.get("access") === "denied";
   const deniedLevel = (searchParams.get("level") as ClientAccessLevel | null) ?? "read";
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data, loading, error } = useApiQuery<DashboardData>("/api/client/dashboard", {
+    ttl: "dashboard",
+  });
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await apiFetch("/api/client/dashboard");
-      const json = await res.json();
-      if (json.success) {
-        setData(json.data);
-        return;
-      }
-      setData(null);
-      setError(json.message || "فشل تحميل البيانات");
-    } catch {
-      setData(null);
-      setError("تعذّر الاتصال بخادم API — تحقق من rkiza-api.vercel.app");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  if (loading) {
-    return <div className="tbl-empty">جاري تحميل لوحة التحكم...</div>;
+  if (loading && !data) {
+    return <LoadingBlock label="جاري تحميل لوحة التحكم..." />;
   }
 
   if (error || !data) {
@@ -88,7 +65,7 @@ function ClientDashboardContent() {
           color: "var(--ruby)",
         }}
       >
-        {error || "فشل تحميل البيانات"}
+        {error || "تعذّر الاتصال بخادم API — تحقق من rkiza-api.vercel.app"}
       </div>
     );
   }

@@ -1,14 +1,39 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
-import { AUTH_COOKIE_NAME } from "@/lib/auth";
-import { getJwtSecret } from "@/lib/jwt-secret";
+import { AUTH_COOKIE_NAME } from '@/lib/auth-constants';
+import { getJwtSecret, isJwtSecretConfigured } from "@/lib/jwt-secret";
 import type { AuthSession } from "@/lib/types";
 import {
   canAccessClientPath,
   getPathAccessLevel,
   permissionDeniedMessage,
 } from "@/lib/client-permissions";
+
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()",
+  );
+  return response;
+}
+
+function redirectToLogin(request: NextRequest, clearSession = false): NextResponse {
+  const response = NextResponse.redirect(new URL("/", request.url));
+  if (clearSession) {
+    response.cookies.set(AUTH_COOKIE_NAME, "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 0,
+    });
+  }
+  return applySecurityHeaders(response);
+}
 
 async function verifyRequestToken(
   token: string,
@@ -33,25 +58,29 @@ export async function middleware(request: NextRequest) {
   const isClientRoute = pathname.startsWith("/client");
 
   if (!isAdminRoute && !isClientRoute) {
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next());
+  }
+
+  if (process.env.NODE_ENV === "production" && !isJwtSecretConfigured()) {
+    return applySecurityHeaders(redirectToLogin(request, true));
   }
 
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
   if (!token) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return redirectToLogin(request);
   }
 
   const session = await verifyRequestToken(token);
   if (!session) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return redirectToLogin(request, true);
   }
 
   if (isAdminRoute && session.role !== "admin") {
-    return NextResponse.redirect(new URL("/", request.url));
+    return redirectToLogin(request, true);
   }
 
   if (isClientRoute && session.role !== "client") {
-    return NextResponse.redirect(new URL("/", request.url));
+    return redirectToLogin(request, true);
   }
 
   if (
@@ -60,7 +89,9 @@ export async function middleware(request: NextRequest) {
     session.is_first_login &&
     !pathname.startsWith("/client/first-login")
   ) {
-    return NextResponse.redirect(new URL("/client/first-login", request.url));
+    return applySecurityHeaders(
+      NextResponse.redirect(new URL("/client/first-login", request.url)),
+    );
   }
 
   if (
@@ -74,10 +105,10 @@ export async function middleware(request: NextRequest) {
     const url = new URL("/client", request.url);
     url.searchParams.set("access", "denied");
     url.searchParams.set("level", level);
-    return NextResponse.redirect(url);
+    return applySecurityHeaders(NextResponse.redirect(url));
   }
 
-  return NextResponse.next();
+  return applySecurityHeaders(NextResponse.next());
 }
 
 export const config = {
