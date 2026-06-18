@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { IconMenu2 } from "@tabler/icons-react";
 import { getClientPageIcon, getClientPageTitle } from "@/lib/client-nav";
+import { resolveMediaUrl } from "@/lib/media-url";
 import type { ClientSession } from "@/lib/types";
 import { useClientPermissions } from "./ClientPermissionsContext";
 import { ClientLogoutButton } from "./ClientLogoutButton";
@@ -23,6 +24,8 @@ export function ClientTopbar({ session, onMenuClick }: ClientTopbarProps) {
   const displayName =
     session.display_name || session.association_name || session.username;
   const initial = displayName.charAt(0) || session.username.charAt(0);
+
+  const avatarSrc = resolveMediaUrl(session.avatar_url);
 
   return (
     <>
@@ -54,10 +57,10 @@ export function ClientTopbar({ session, onMenuClick }: ClientTopbarProps) {
               className="tb-avatar"
               style={{ overflow: "hidden", padding: 0 }}
             >
-              {session.avatar_url ? (
+              {avatarSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={session.avatar_url}
+                  src={avatarSrc}
                   alt={session.association_name}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />

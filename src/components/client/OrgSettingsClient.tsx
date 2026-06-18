@@ -1,5 +1,6 @@
 "use client";
-import { apiFetch, apiUrl } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
+import { resolveMediaUrl } from "@/lib/media-url";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -94,6 +95,9 @@ export function OrgSettingsClient() {
       setSaving(false);
     }
   }
+
+  const stampPreview = stampFile ? URL.createObjectURL(stampFile) : resolveMediaUrl(form.stamp_url);
+  const logoPreview = logoFile ? URL.createObjectURL(logoFile) : resolveMediaUrl(form.logo_url);
 
   return (
     <AppPage>
@@ -257,9 +261,9 @@ export function OrgSettingsClient() {
                   ختم الجمعية
                 </div>
                 <label className="stamp-preview" style={{ cursor: "pointer" }}>
-                  {form.stamp_url ? (
+                  {stampPreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={form.stamp_url} alt="ختم الجمعية" style={{ maxWidth: "100%", maxHeight: 120 }} />
+                    <img src={stampPreview} alt="ختم الجمعية" style={{ maxWidth: "100%", maxHeight: 120 }} />
                   ) : (
                     <div style={{ textAlign: "center" }}>
                       <IconCertificate size={24} style={{ display: "block", margin: "0 auto 4px" }} />
@@ -279,9 +283,9 @@ export function OrgSettingsClient() {
                   شعار الجمعية
                 </div>
                 <label className="stamp-preview" style={{ cursor: "pointer", borderRadius: 10 }}>
-                  {form.logo_url ? (
+                  {logoPreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={form.logo_url} alt="شعار الجمعية" style={{ maxWidth: "100%", maxHeight: 120 }} />
+                    <img src={logoPreview} alt="شعار الجمعية" style={{ maxWidth: "100%", maxHeight: 120 }} />
                   ) : (
                     <div style={{ textAlign: "center" }}>
                       <IconPhoto size={24} style={{ display: "block", margin: "0 auto 4px" }} />

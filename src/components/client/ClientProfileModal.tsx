@@ -1,5 +1,6 @@
 "use client";
-import { apiFetch, apiUrl } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
+import { resolveMediaUrl } from "@/lib/media-url";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -32,7 +33,7 @@ export function ClientProfileModal({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    session.avatar_url ?? null,
+    resolveMediaUrl(session.avatar_url),
   );
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,7 +61,7 @@ export function ClientProfileModal({
         }
         setAssociationName(json.data.association_name);
         setUsername(json.data.username);
-        setAvatarPreview(json.data.avatar_url);
+        setAvatarPreview(resolveMediaUrl(json.data.avatar_url));
       })
       .catch(() => setError("خطأ في الاتصال بالخادم"))
       .finally(() => setLoading(false));
@@ -121,7 +122,7 @@ export function ClientProfileModal({
 
       toast.success(json.message || "تم تحديث الملف الشخصي بنجاح");
       if (json.data?.avatar_url) {
-        setAvatarPreview(json.data.avatar_url);
+        setAvatarPreview(resolveMediaUrl(json.data.avatar_url));
       }
       setAvatarFile(null);
       setPassword("");

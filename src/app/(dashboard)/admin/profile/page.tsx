@@ -1,5 +1,6 @@
 "use client";
-import { apiFetch, apiUrl } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
+import { resolveMediaUrl } from "@/lib/media-url";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,7 +46,7 @@ export default function AdminProfilePage() {
         }
         setProfile(json.data);
         setUsername(json.data.username);
-        setAvatarPreview(json.data.avatar_url);
+        setAvatarPreview(resolveMediaUrl(json.data.avatar_url));
       } catch {
         setError("خطأ في الاتصال بالخادم");
       } finally {
@@ -108,7 +109,7 @@ export default function AdminProfilePage() {
       setConfirmPassword("");
       setAvatarFile(null);
       if (json.data?.avatar_url) {
-        setAvatarPreview(json.data.avatar_url);
+        setAvatarPreview(resolveMediaUrl(json.data.avatar_url));
       }
       router.refresh();
     } catch {
