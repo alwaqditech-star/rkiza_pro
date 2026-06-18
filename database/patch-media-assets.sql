@@ -1,0 +1,8 @@
+USE rikaz_accounting_db;
+
+CREATE TABLE IF NOT EXISTS media_assets (
+  media_key     VARCHAR(100) NOT NULL PRIMARY KEY,
+  content_type  VARCHAR(80)  NOT NULL,
+  data          LONGBLOB     NOT NULL,
+  updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
