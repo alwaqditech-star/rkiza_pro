@@ -1,9 +1,10 @@
 "use client";
-import { apiFetch, apiUrl } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
 
 import { useCallback, useEffect, useState } from "react";
 import {
   IconCash,
+  IconCheck,
   IconFileInvoice,
   IconInbox,
   IconRefresh,
@@ -11,7 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { fmtAmt, isFutureYearMonth } from "@/lib/format";
 import { payrollFilename } from "@/lib/export-filenames";
-import type { Employee, PayrollPreview } from "@/lib/types";
+import type { PayrollEmployee, PayrollPreview } from "@/lib/types";
 import { notifyApiResult } from "@/lib/notify";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useClientPermissions } from "./ClientPermissionsContext";
@@ -42,6 +43,7 @@ export function PayrollClient() {
   const [preview, setPreview] = useState<PayrollPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [disbursingId, setDisbursingId] = useState<number | null>(null);
 
   const loadPreview = useCallback(async () => {
     if (isFutureYearMonth(month, year)) {
@@ -83,7 +85,37 @@ export function PayrollClient() {
     }
   }
 
-  const employees: Employee[] = preview?.employees ?? [];
+  async function handleDisburseEmployee(employee: PayrollEmployee) {
+    if (!preview || !employee.net_salary) return;
+    if (
+      !confirm(
+        `صرف راتب ${employee.name} بمبلغ ${fmtAmt(employee.net_salary)} ر.س لشهر ${preview.month_label} ${preview.year}م؟`,
+      )
+    ) {
+      return;
+    }
+
+    setDisbursingId(employee.id);
+    try {
+      const res = await apiFetch("/api/client/payroll/disburse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employee_id: employee.id,
+          month,
+          year: Number(year),
+        }),
+      });
+      const json = await res.json();
+      if (notifyApiResult(toast, json, { success: json.message || "تم صرف الراتب", error: "فشل الصرف" })) {
+        await loadPreview();
+      }
+    } finally {
+      setDisbursingId(null);
+    }
+  }
+
+  const employees: PayrollEmployee[] = preview?.employees ?? [];
 
   return (
     <AppPage>
@@ -182,6 +214,9 @@ export function PayrollClient() {
               <div style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>
                 {employees.length} موظف نشط
                 {preview.posted ? " — تم الترحيل" : ""}
+                {preview.posted
+                  ? ` — تم صرف ${preview.disbursed_count} / ${employees.length}`
+                  : ""}
               </div>
             </div>
             {canWrite ? (
@@ -271,6 +306,8 @@ export function PayrollClient() {
                   <th>الإجمالي</th>
                   <th>التأمينات</th>
                   <th>الصافي</th>
+                  <th>حالة الصرف</th>
+                  {preview.posted && canWrite ? <th>إجراء</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -304,6 +341,37 @@ export function PayrollClient() {
                     >
                       {fmtAmt(employee.net_salary)}
                     </td>
+                    <td>
+                      {employee.disbursed ? (
+                        <span className="badge badge-teal" style={{ fontSize: 10 }}>
+                          تم الصرف
+                          {employee.voucher_number ? ` — ${employee.voucher_number}` : ""}
+                        </span>
+                      ) : preview.posted ? (
+                        <span className="badge badge-slate" style={{ fontSize: 10 }}>
+                          لم يُصرف
+                        </span>
+                      ) : (
+                        <span style={{ color: "var(--mist)", fontSize: 12 }}>—</span>
+                      )}
+                    </td>
+                    {preview.posted && canWrite ? (
+                      <td>
+                        {employee.disbursed ? (
+                          <span style={{ color: "var(--mist)", fontSize: 12 }}>—</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            disabled={disbursingId === employee.id}
+                            onClick={() => handleDisburseEmployee(employee)}
+                          >
+                            <IconCash size={14} />
+                            {disbursingId === employee.id ? "جاري الصرف..." : "صرف الراتب"}
+                          </button>
+                        )}
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
                 <tr style={{ background: "var(--teal-pale)", fontWeight: 700 }}>
@@ -319,6 +387,14 @@ export function PayrollClient() {
                   <td style={{ direction: "ltr", textAlign: "right", color: "var(--emerald)" }}>
                     {fmtAmt(preview.total_net)}
                   </td>
+                  <td style={{ textAlign: "center", fontSize: 12, color: "var(--mist)" }}>
+                    {preview.posted
+                      ? preview.all_disbursed
+                        ? "اكتمل الصرف"
+                        : `${preview.pending_count} متبقي`
+                      : "—"}
+                  </td>
+                  {preview.posted && canWrite ? <td /> : null}
                 </tr>
               </tbody>
             </table>
