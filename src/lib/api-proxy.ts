@@ -6,7 +6,7 @@ const API_BASE = (
   'https://rkiza-api.vercel.app'
 ).replace(/\/$/, '');
 
-const ALLOWED_API_ROOTS = new Set(['auth', 'client', 'admin', 'theme']);
+const ALLOWED_API_ROOTS = new Set(['auth', 'client', 'admin', 'theme', 'media']);
 
 const FORWARD_REQUEST_HEADERS = ['content-type', 'accept', 'accept-language'];
 

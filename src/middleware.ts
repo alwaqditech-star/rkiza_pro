@@ -62,6 +62,23 @@ export async function middleware(request: NextRequest) {
   if (
     isClientRoute &&
     session.role === "client" &&
+    session.status === "expired"
+  ) {
+    return redirectToLogin(request, true);
+  }
+
+  if (
+    isClientRoute &&
+    session.role === "client" &&
+    session.subscription_end &&
+    session.subscription_end.slice(0, 10) < new Date().toISOString().slice(0, 10)
+  ) {
+    return redirectToLogin(request, true);
+  }
+
+  if (
+    isClientRoute &&
+    session.role === "client" &&
     session.is_first_login &&
     !pathname.startsWith("/client/first-login")
   ) {
