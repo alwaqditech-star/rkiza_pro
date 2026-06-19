@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 import { useToast } from "@/components/ui/ToastProvider";
+import { PASSWORD_MIN_LENGTH_MESSAGE, isPasswordLongEnough } from "@/lib/password-policy";
 
 interface AdminProfile {
   id: number;
@@ -72,8 +73,8 @@ export default function AdminProfilePage() {
       setError("اسم المستخدم مطلوب");
       return;
     }
-    if (password && password.length < 6) {
-      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    if (password && !isPasswordLongEnough(password)) {
+      setError(PASSWORD_MIN_LENGTH_MESSAGE);
       return;
     }
     if (password && password !== confirmPassword) {

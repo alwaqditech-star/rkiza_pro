@@ -14,6 +14,7 @@ import {
 import { AppPage, PageHero } from "@/components/ui/PageHero";
 import { notifyApiResult } from "@/lib/notify";
 import { useToast } from "@/components/ui/ToastProvider";
+import { PASSWORD_MIN_LENGTH_MESSAGE, isPasswordLongEnough } from "@/lib/password-policy";
 
 interface Association {
   id: number;
@@ -159,8 +160,8 @@ export default function SubscribersPage() {
       return;
     }
 
-    if (editPassword && editPassword.length < 6) {
-      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    if (editPassword && !isPasswordLongEnough(editPassword)) {
+      setError(PASSWORD_MIN_LENGTH_MESSAGE);
       return;
     }
 

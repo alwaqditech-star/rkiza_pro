@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { IconCamera, IconUserCircle, IconX } from "@tabler/icons-react";
 import type { ClientSession } from "@/lib/types";
 import { useToast } from "@/components/ui/ToastProvider";
+import { PASSWORD_MIN_LENGTH_MESSAGE, isPasswordLongEnough } from "@/lib/password-policy";
 
 interface ClientProfileModalProps {
   open: boolean;
@@ -87,8 +88,8 @@ export function ClientProfileModal({
       setError("اسم المستخدم مطلوب");
       return;
     }
-    if (password && password.length < 6) {
-      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    if (password && !isPasswordLongEnough(password)) {
+      setError(PASSWORD_MIN_LENGTH_MESSAGE);
       return;
     }
     if (password && password !== confirmPassword) {

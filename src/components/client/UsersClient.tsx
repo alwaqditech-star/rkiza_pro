@@ -14,6 +14,7 @@ import { notifyApiResult } from "@/lib/notify";
 import { useToast } from "@/components/ui/ToastProvider";
 import type { AssociationUserRole, AssociationUserStatus, AssociationUserView } from "@/lib/types";
 import { AppPage, PageHero } from "@/components/ui/PageHero";
+import { PASSWORD_MIN_LENGTH_MESSAGE, isPasswordLongEnough } from "@/lib/password-policy";
 
 const emptyForm = {
   display_name: "",
@@ -71,6 +72,16 @@ export function UsersClient() {
   async function handleSave() {
     const path = editId ? `/api/client/users/${editId}` : "/api/client/users";
     setMessage("");
+
+    if (!editId && !isPasswordLongEnough(form.password)) {
+      setMessage(PASSWORD_MIN_LENGTH_MESSAGE);
+      return;
+    }
+    if (editId && form.password && !isPasswordLongEnough(form.password)) {
+      setMessage(PASSWORD_MIN_LENGTH_MESSAGE);
+      return;
+    }
+
     try {
       const res = await apiFetch(path, {
         method: editId ? "PUT" : "POST",

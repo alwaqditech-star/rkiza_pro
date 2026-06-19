@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -9,16 +9,15 @@ import {
   IconListTree,
   IconSearch,
 } from "@tabler/icons-react";
-import { COA } from "@/lib/coa-data";
-
-type CoaAccount = { code: string; name: string };
-type CoaSubNode = {
-  code: string;
-  name: string;
-  subs?: CoaSubNode[];
-  accs?: CoaAccount[];
-};
-type CoaGroup = { code: string; name: string; subs: CoaSubNode[] };
+import { apiGetJson } from "@/lib/api-get";
+import {
+  buildCoaGroupsFromAccounts,
+  type CoaTreeAccount,
+  type CoaTreeGroup,
+  type CoaTreeSubNode,
+} from "@/lib/coa-utils";
+import type { ChartOfAccount } from "@/lib/types";
+import { LoadingBlock } from "@/components/ui/LoadingBlock";
 
 const GROUP_META: Record<
   string,
@@ -34,11 +33,11 @@ function matchesSearch(text: string, query: string) {
   return text.toLowerCase().includes(query) || text.includes(query);
 }
 
-function filterSubNode(node: CoaSubNode, query: string): CoaSubNode | null {
+function filterSubNode(node: CoaTreeSubNode, query: string): CoaTreeSubNode | null {
   if (node.subs?.length) {
     const subs = node.subs
       .map((child) => filterSubNode(child, query))
-      .filter((child): child is CoaSubNode => child !== null);
+      .filter((child): child is CoaTreeSubNode => child !== null);
     if (subs.length) return { ...node, subs };
   }
 
@@ -56,20 +55,20 @@ function filterSubNode(node: CoaSubNode, query: string): CoaSubNode | null {
   return null;
 }
 
-function filterCoaGroups(query: string): CoaGroup[] {
-  if (!query) return COA as unknown as CoaGroup[];
+function filterCoaGroups(query: string, groups: CoaTreeGroup[]): CoaTreeGroup[] {
+  if (!query) return groups;
 
-  return (COA as unknown as CoaGroup[])
+  return groups
     .map((group) => {
       const subs = group.subs
         .map((sub) => filterSubNode(sub, query))
-        .filter((sub): sub is CoaSubNode => sub !== null);
+        .filter((sub): sub is CoaTreeSubNode => sub !== null);
       return subs.length ? { ...group, subs } : null;
     })
-    .filter((group): group is CoaGroup => group !== null);
+    .filter((group): group is CoaTreeGroup => group !== null);
 }
 
-function countAccounts(node: CoaSubNode): number {
+function countAccounts(node: CoaTreeSubNode): number {
   let total = node.accs?.length ?? 0;
   node.subs?.forEach((child) => {
     total += countAccounts(child);
@@ -77,7 +76,7 @@ function countAccounts(node: CoaSubNode): number {
   return total;
 }
 
-function collectOpenIds(groups: CoaGroup[]): Record<string, boolean> {
+function collectOpenIds(groups: CoaTreeGroup[]): Record<string, boolean> {
   const ids: Record<string, boolean> = {};
   groups.forEach((group) => {
     ids[`g${group.code}`] = true;
@@ -91,7 +90,7 @@ function collectOpenIds(groups: CoaGroup[]): Record<string, boolean> {
   return ids;
 }
 
-function CoaAccountList({ accounts }: { accounts: CoaAccount[] }) {
+function CoaAccountList({ accounts }: { accounts: CoaTreeAccount[] }) {
   return (
     <div className="coa-accounts open">
       {accounts.map((acc) => (
@@ -109,7 +108,7 @@ function CoaNestedSection({
   toggle,
   isOpen,
 }: {
-  node: CoaSubNode;
+  node: CoaTreeSubNode;
   toggle: (id: string) => void;
   isOpen: (id: string) => boolean;
 }) {
@@ -142,7 +141,7 @@ function CoaSubSection({
   toggle,
   isOpen,
 }: {
-  sub: CoaSubNode;
+  sub: CoaTreeSubNode;
   groupTone: string;
   toggle: (id: string) => void;
   isOpen: (id: string) => boolean;
@@ -189,21 +188,48 @@ function CoaSubSection({
 export function CoaTreeView() {
   const [search, setSearch] = useState("");
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const [groups, setGroups] = useState<CoaTreeGroup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  const allGroups = COA as unknown as CoaGroup[];
+  const loadCoa = useCallback(async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const json = await apiGetJson<ChartOfAccount[]>("/api/client/coa", {
+        ttl: "static",
+      });
+      if (json.success && json.data) {
+        setGroups(buildCoaGroupsFromAccounts(json.data));
+      } else {
+        setGroups([]);
+        setLoadError(json.message ?? "تعذّر تحميل الدليل المحاسبي");
+      }
+    } catch {
+      setGroups([]);
+      setLoadError("تعذّر الاتصال بالخادم");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadCoa();
+  }, [loadCoa]);
+
   const normalizedSearch = search.trim().toLowerCase();
   const filteredCoa = useMemo(
-    () => filterCoaGroups(normalizedSearch),
-    [normalizedSearch],
+    () => filterCoaGroups(normalizedSearch, groups),
+    [normalizedSearch, groups],
   );
 
   const stats = useMemo(() => {
-    const totalAccounts = allGroups.reduce(
+    const totalAccounts = groups.reduce(
       (sum, group) => sum + group.subs.reduce((s, sub) => s + countAccounts(sub), 0),
       0,
     );
-    return { groups: allGroups.length, totalAccounts };
-  }, [allGroups]);
+    return { groups: groups.length, totalAccounts };
+  }, [groups]);
 
   function toggle(id: string) {
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -219,6 +245,22 @@ export function CoaTreeView() {
 
   function collapseAll() {
     setOpenGroups({});
+  }
+
+  if (loading) {
+    return <LoadingBlock label="جاري تحميل الدليل المحاسبي..." />;
+  }
+
+  if (loadError) {
+    return (
+      <div className="tbl-empty" style={{ padding: "3rem 1rem" }}>
+        <IconListTree size={36} stroke={1.2} style={{ opacity: 0.4 }} />
+        <p>{loadError}</p>
+        <button type="button" className="btn btn-primary btn-sm" onClick={() => void loadCoa()}>
+          إعادة المحاولة
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -242,7 +284,7 @@ export function CoaTreeView() {
       </section>
 
       <div className="coa-type-grid">
-        {allGroups.map((group) => {
+        {groups.map((group) => {
           const meta = GROUP_META[group.code];
           const count = group.subs.reduce((sum, sub) => sum + countAccounts(sub), 0);
           return (

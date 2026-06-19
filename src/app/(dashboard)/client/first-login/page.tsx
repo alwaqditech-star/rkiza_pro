@@ -5,6 +5,7 @@ import { syncSessionCookie } from "@/lib/session-bridge";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconLock, IconScale } from "@tabler/icons-react";
+import { PASSWORD_MIN_LENGTH_MESSAGE, isPasswordLongEnough } from "@/lib/password-policy";
 
 export default function FirstLoginPage() {
   const router = useRouter();
@@ -17,8 +18,8 @@ export default function FirstLoginPage() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 6) {
-      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    if (!isPasswordLongEnough(password)) {
+      setError(PASSWORD_MIN_LENGTH_MESSAGE);
       return;
     }
 
